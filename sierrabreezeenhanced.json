@@ -1,0 +1,16 @@
+{
+    "KPlugin": {
+        "Description": "Window decoration based on SierraBreeze and BreezeEnhanced styles for the Plasma Desktop",
+        "EnabledByDefault": true,
+        "Id": "org.kde.sierrabreezeenhanced",
+        "Name": "Sierra Breeze Enhanced",
+        "ServiceTypes": [
+            "org.kde.kdecoration3"
+        ]
+    },
+    "X-KDE-ConfigModule": "kcm_sierrabreezeenhanceddecoration",
+    "org.kde.kdecoration3": {
+        "defaultTheme": "Sierra Breeze Enhanced",
+        "recommendedBorderSize": "Tiny"
+    }
+}
