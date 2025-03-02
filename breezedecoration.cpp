@@ -347,7 +347,12 @@ namespace Breeze
         else
         {
             QColor darkTextColor(!c->isActive() && matchColorForTitleBar() ? QColor(81, 102, 107) : QColor(34, 45, 50));
-            QColor lightTextColor(!c->isActive() && matchColorForTitleBar() ? QColor(192, 193, 194) : QColor(250, 251, 252));
+            // QColor lightTextColor(!c->isActive() && matchColorForTitleBar() ? QColor(192, 193, 194) : QColor(250, 251, 252));
+
+            // Alpha based color
+            QColor lightTextColor(!c->isActive() && matchColorForTitleBar() ?
+                QColor(255, 255, 255, 128) :  // 50% opacity white for inactive
+                QColor(255, 255, 255, 191));  // 75% opacity white for active
 
             QColor titleBarColor = this->titleBarColor();
 
