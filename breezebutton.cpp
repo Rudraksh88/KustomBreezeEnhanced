@@ -204,294 +204,205 @@ namespace Breeze
     }
 
     //__________________________________________________________________
-    void Button::drawIconPlasma( QPainter *painter ) const
-    {
-
-        painter->setRenderHints( QPainter::Antialiasing );
+    void Button::drawIconPlasma(QPainter *painter) const {
+        painter->setRenderHints(QPainter::Antialiasing);
 
         /*
-        scale painter so that its window matches QRect( -1, -1, 20, 20 )
+        scale painter so that its window matches QRect(-1, -1, 20, 20)
         this makes all further rendering and scaling simpler
-        all further rendering is preformed inside QRect( 0, 0, 18, 18 )
+        all further rendering is preformed inside QRect(0, 0, 18, 18)
         */
-        painter->translate( geometry().topLeft() );
+        painter->translate(geometry().topLeft());
 
         const double STROKE_WIDTH = 1.5;
 
-        const qreal width( m_iconSize.width() );
-        painter->scale( width/20, width/20 );
-        painter->translate( 1, 1 );
+        const qreal width(m_iconSize.width());
+        painter->scale(width/20, width/20);
+        painter->translate(1, 1);
 
-        // render background
-        QColor backgroundColor( this->backgroundColor() );
-        // if( backgroundColor.isValid() )
-        // {
-        //     painter->setPen( Qt::NoPen );
-        //     painter->setBrush( backgroundColor );
-        //     painter->drawEllipse( QRectF( 0, 0, 18, 18 ) );
-        // }
-
-        // render mark
-        // QColor foregroundColor( this->foregroundColor() );
-
-        // Set foreground color to 255,255,255,125
+        // Get the base foreground color with initial opacity
         QColor foregroundColor(255, 255, 255, 125);
 
-        if( foregroundColor.isValid() )
-        {
+        // Apply animation when enabled
+        auto d = qobject_cast<Decoration*>(decoration());
+        bool animationsEnabled = d && d->internalSettings()->animationsEnabled();
 
-            // setup painter
-            QPen pen( foregroundColor );
-            pen.setCapStyle( Qt::RoundCap );
-            pen.setJoinStyle( Qt::MiterJoin );
-            // pen.setWidthF( PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
-            pen.setWidthF( STROKE_WIDTH*qMax((qreal)1.0, 20/width ) );
+        // Calculate opacity based on animation state
+        qreal opacity = 0.5;  // Base opacity (125/255)
 
-            painter->setPen( pen );
-            painter->setBrush( Qt::NoBrush );
-
-            switch( type() )
-            {
-
-                case DecorationButtonType::Close:
-                {
-                    // Change color to white when hovered
-                    if ( this->hovered() ) {
-                      pen.setColor(QColor(255, 255, 255, 255));
-                      painter->setPen( pen );
-                    }
-
-                    // Set color to 255,255,255,80 if pressed
-                    if (isPressed()) {
-                      pen.setColor(QColor(255, 255, 255, 125));
-                      painter->setPen( pen );
-                    }
-
-                    painter->drawLine( QPointF( 5, 5 ), QPointF( 13, 13 ) );
-                    painter->drawLine( 13, 5, 5, 13 );
-                    break;
-                }
-
-                case DecorationButtonType::Maximize:
-                {
-                    // Change color to white when hovered
-                    if ( this->hovered() ) {
-                      pen.setColor(QColor(255, 255, 255, 255));
-                      painter->setPen( pen );
-                    }
-
-                    // Set color to 255,255,255,80 if pressed
-                    if (isPressed()) {
-                      pen.setColor(QColor(255, 255, 255, 125));
-                      painter->setPen( pen );
-                    }
-
-                    if( isChecked() )
-                    {
-                        pen.setJoinStyle( Qt::RoundJoin );
-                        painter->setPen( pen );
-
-                        painter->drawPolygon( QVector<QPointF>{
-                            QPointF( 4, 9 ),
-                            QPointF( 9, 4 ),
-                            QPointF( 14, 9 ),
-                            QPointF( 9, 14 )} );
-
-                    } else {
-                        painter->drawPolyline( QVector<QPointF>{
-                            QPointF( 4, 11 ),
-                            QPointF( 9, 6 ),
-                            QPointF( 14, 11 )});
-                    }
-                    break;
-                }
-
-                case DecorationButtonType::Minimize:
-                {
-                    // Change color to white when hovered
-                    if ( this->hovered() ) {
-                      pen.setColor(QColor(255, 255, 255, 255));
-                      painter->setPen( pen );
-                    }
-
-                    // Set color to 255,255,255,80 if pressed
-                    if (isPressed()) {
-                      pen.setColor(QColor(255, 255, 255, 125));
-                      painter->setPen( pen );
-                    }
-
-                    painter->drawPolyline( QVector<QPointF>{
-                        QPointF( 4, 6.5 ),
-                        QPointF( 9, 11.5 ),
-                        QPointF( 14, 6.5 ) });
-                    break;
-                }
-
-                case DecorationButtonType::OnAllDesktops:
-                {
-                    painter->setPen( Qt::NoPen );
-                    painter->setBrush( foregroundColor );
-
-                    if( isChecked())
-                    {
-
-                        // outer ring
-                        painter->drawEllipse( QRectF( 3, 3, 12, 12 ) );
-
-                        // center dot
-                        QColor backgroundColor( this->backgroundColor() );
-                        auto d = qobject_cast<Decoration*>( decoration() );
-                        if( !backgroundColor.isValid() && d ) backgroundColor = d->titleBarColor();
-
-                        if( backgroundColor.isValid() )
-                        {
-                            painter->setBrush( backgroundColor );
-                            painter->drawEllipse( QRectF( 8, 8, 2, 2 ) );
-                        }
-
-                    } else {
-
-                        painter->drawPolygon( QVector<QPointF> {
-                            QPointF( 6.5, 8.5 ),
-                            QPointF( 12, 3 ),
-                            QPointF( 15, 6 ),
-                            QPointF( 9.5, 11.5 )} );
-
-                        painter->setPen( pen );
-                        painter->drawLine( QPointF( 5.5, 7.5 ), QPointF( 10.5, 12.5 ) );
-                        painter->drawLine( QPointF( 12, 6 ), QPointF( 4.5, 13.5 ) );
-                    }
-                    break;
-                }
-
-                case DecorationButtonType::Shade:
-                {
-
-                    if (isChecked())
-                    {
-
-                        painter->drawLine( QPointF( 4, 5.5 ), QPointF( 14, 5.5 ) ); // painter->drawLine( 4, 5, 14, 5 );
-                        painter->drawPolyline( QVector<QPointF> {
-                            QPointF( 4, 8 ),
-                            QPointF( 9, 13 ),
-                            QPointF( 14, 8 )} );
-
-                    } else {
-
-                        painter->drawLine( QPointF( 4, 5.5 ), QPointF( 14, 5.5 ) ); // painter->drawLine( 4, 5, 14, 5 );
-                        painter->drawPolyline(  QVector<QPointF> {
-                            QPointF( 4, 13 ),
-                            QPointF( 9, 8 ),
-                            QPointF( 14, 13 ) });
-                    }
-
-                    break;
-
-                }
-
-                case DecorationButtonType::KeepBelow:
-                {
-
-                    painter->drawPolyline(  QVector<QPointF> {
-                        QPointF( 4, 5 ),
-                        QPointF( 9, 10 ),
-                        QPointF( 14, 5 ) });
-
-                    painter->drawPolyline(  QVector<QPointF> {
-                        QPointF( 4, 9 ),
-                        QPointF( 9, 14 ),
-                        QPointF( 14, 9 ) });
-                    break;
-
-                }
-
-                case DecorationButtonType::KeepAbove:
-                {
-                    // painter->drawPolyline(  QVector<QPointF> {
-                    //     QPointF( 4, 9 ),
-                    //     QPointF( 9, 4 ),
-                    //     QPointF( 14, 9 ) });
-
-                    // painter->drawPolyline(  QVector<QPointF> {
-                    //     QPointF( 4, 13 ),
-                    //     QPointF( 9, 8 ),
-                    //     QPointF( 14, 13 ) });
-                    // break;
-
-                    // // Draw a circle
-                    // painter->drawEllipse( QRectF( 4, 4, 11, 11 ) );
-                    // break;
-
-                    // Draw a filled circle. Smaller than the previous one
-                    // painter->setBrush( foregroundColor );
-
-                    // Set color to white when hovered
-                    // if ( this->hovered() ) {
-                    //   pen.setColor(QColor(255, 255, 255, 255));
-                    //   painter->setPen( pen );
-                    // }
-
-                    // if (isChecked() && !this->hovered()) {
-                    //   // Fill the circle
-                    //   painter->setBrush( foregroundColor );
-                    // } else if (isChecked() && this->hovered()) {
-                    //   // Fill the circle
-                    //   painter->setBrush( QColor(255, 255, 255, 255) );
-                    // } else {
-                    //   // Do not fill the circle
-                    //   painter->setBrush( Qt::NoBrush );
-                    // }
-
-                    // Set color to white if checked or hovered
-                    if (this->hovered() && !isChecked()) {
-                      pen.setColor(QColor(255, 255, 255, 255)); // Only set color to white for the stroke
-                      painter->setPen( pen );
-                    } else if (isChecked()) {
-                      pen.setColor(QColor(255, 255, 255, 255)); // Set color to white for the stroke
-                      painter->setBrush( QColor(255, 255, 255, 255) ); // Also fill the circle with white
-                      painter->setPen( pen );
-                    } else {
-                      painter->setBrush( Qt::NoBrush ); // Do not fill the circle
-                      painter->setPen( pen ); // Set color to the default color
-                    }
-
-                    // Set color to 255,255,255,80 if pressed
-                    if (isPressed()) {
-                      pen.setColor(QColor(255, 255, 255, 125));
-                      painter->setPen( pen );
-                    }
-
-                    painter->drawEllipse( QRectF( 4, 5, 8, 8 ) );
-                    break;
-                }
-
-
-                case DecorationButtonType::ApplicationMenu:
-                {
-                    painter->drawRect( QRectF( 3.5, 4.5, 11, 1 ) ); // painter->drawLine( QPointF( 3.5, 5 ), QPointF( 14.5, 5 ) );
-                    painter->drawRect( QRectF( 3.5, 8.5, 11, 1 ) ); // painter->drawLine( QPointF( 3.5, 9 ), QPointF( 14.5, 9 ) );
-                    painter->drawRect( QRectF( 3.5, 12.5, 11, 1 ) ); // painter->drawLine( QPointF( 3.5, 13 ), QPointF( 14.5, 13 ) );
-                    break;
-                }
-
-                case DecorationButtonType::ContextHelp:
-                {
-                    QPainterPath path;
-                    path.moveTo( 5, 6 );
-                    path.arcTo( QRectF( 5, 3.5, 8, 5 ), 180, -180 );
-                    path.cubicTo( QPointF(12.5, 9.5), QPointF( 9, 7.5 ), QPointF( 9, 11.5 ) );
-                    painter->drawPath( path );
-
-                    painter->drawRect( QRectF( 9, 15, 0.5, 0.5 ) ); // painter->drawPoint( 9, 15 );
-
-                    break;
-                }
-
-                default: break;
+        if (animationsEnabled) {
+            if (isPressed()) {
+                // When pressed, reduce opacity
+                opacity = 0.5 - 0.2 * m_animation->currentValue().toReal();
+            } else {
+                // Animate between normal (0.5) and hover (1.0) states in both directions
+                // When hovered, m_animation runs forward from 0.0 to 1.0
+                // When unhovered, m_animation runs backward from 1.0 to 0.0
+                opacity = 0.5 + 0.5 * m_animation->currentValue().toReal();
             }
-
+        } else {
+            // Without animations, use instant opacity changes
+            if (this->hovered()) {
+                opacity = 1.0;  // Full opacity (255/255)
+            } else if (isPressed()) {
+                opacity = 0.3;  // Reduced opacity when pressed
+            }
         }
 
+        // Apply calculated opacity
+        foregroundColor.setAlphaF(opacity);
+
+        // setup painter
+        QPen pen(foregroundColor);
+        pen.setCapStyle(Qt::RoundCap);
+        pen.setJoinStyle(Qt::MiterJoin);
+        pen.setWidthF(STROKE_WIDTH * qMax((qreal)1.0, 20/width));
+
+        painter->setPen(pen);
+        painter->setBrush(Qt::NoBrush);
+
+        switch (type()) {
+            case DecorationButtonType::Close:
+            {
+                painter->drawLine(QPointF(5, 5), QPointF(13, 13));
+                painter->drawLine(13, 5, 5, 13);
+                break;
+            }
+
+            case DecorationButtonType::Maximize:
+            {
+                if (isChecked()) {
+                    pen.setJoinStyle(Qt::RoundJoin);
+                    painter->setPen(pen);
+
+                    painter->drawPolygon(QVector<QPointF>{
+                        QPointF(4, 9),
+                        QPointF(9, 4),
+                        QPointF(14, 9),
+                        QPointF(9, 14)});
+                } else {
+                    painter->drawPolyline(QVector<QPointF>{
+                        QPointF(4, 11),
+                        QPointF(9, 6),
+                        QPointF(14, 11)});
+                }
+                break;
+            }
+
+            case DecorationButtonType::Minimize:
+            {
+                painter->drawPolyline(QVector<QPointF>{
+                    QPointF(4, 6.5),
+                    QPointF(9, 11.5),
+                    QPointF(14, 6.5)});
+                break;
+            }
+
+            case DecorationButtonType::OnAllDesktops:
+            {
+                painter->setPen(Qt::NoPen);
+                painter->setBrush(foregroundColor);
+
+                if (isChecked()) {
+                    // outer ring
+                    painter->drawEllipse(QRectF(3, 3, 12, 12));
+
+                    // center dot
+                    QColor backgroundColor(this->backgroundColor());
+                    auto d = qobject_cast<Decoration*>(decoration());
+                    if (!backgroundColor.isValid() && d) backgroundColor = d->titleBarColor();
+
+                    if (backgroundColor.isValid()) {
+                        painter->setBrush(backgroundColor);
+                        painter->drawEllipse(QRectF(8, 8, 2, 2));
+                    }
+                } else {
+                    painter->drawPolygon(QVector<QPointF>{
+                        QPointF(6.5, 8.5),
+                        QPointF(12, 3),
+                        QPointF(15, 6),
+                        QPointF(9.5, 11.5)});
+
+                    painter->setPen(pen);
+                    painter->drawLine(QPointF(5.5, 7.5), QPointF(10.5, 12.5));
+                    painter->drawLine(QPointF(12, 6), QPointF(4.5, 13.5));
+                }
+                break;
+            }
+
+            case DecorationButtonType::Shade:
+            {
+                if (isChecked()) {
+                    painter->drawLine(QPointF(4, 5.5), QPointF(14, 5.5));
+                    painter->drawPolyline(QVector<QPointF>{
+                        QPointF(4, 8),
+                        QPointF(9, 13),
+                        QPointF(14, 8)});
+                } else {
+                    painter->drawLine(QPointF(4, 5.5), QPointF(14, 5.5));
+                    painter->drawPolyline(QVector<QPointF>{
+                        QPointF(4, 13),
+                        QPointF(9, 8),
+                        QPointF(14, 13)});
+                }
+                break;
+            }
+
+            case DecorationButtonType::KeepBelow:
+            {
+                painter->drawPolyline(QVector<QPointF>{
+                    QPointF(4, 5),
+                    QPointF(9, 10),
+                    QPointF(14, 5)});
+
+                painter->drawPolyline(QVector<QPointF>{
+                    QPointF(4, 9),
+                    QPointF(9, 14),
+                    QPointF(14, 9)});
+                break;
+            }
+
+            case DecorationButtonType::KeepAbove:
+            {
+                // Set color to white if checked or hovered
+                if (this->hovered() && !isChecked()) {
+                    // Just brighter outline for hover state
+                    painter->setBrush(Qt::NoBrush);
+                } else if (isChecked()) {
+                    // Fill the circle when checked
+                    painter->setBrush(foregroundColor);
+                } else {
+                    // Normal state - just outline
+                    painter->setBrush(Qt::NoBrush);
+                }
+
+                // Draw the circle outline and/or filled circle
+                painter->drawEllipse(QRectF(4, 5, 8, 8));
+                break;
+            }
+
+            case DecorationButtonType::ApplicationMenu:
+            {
+                painter->drawRect(QRectF(3.5, 4.5, 11, 1));
+                painter->drawRect(QRectF(3.5, 8.5, 11, 1));
+                painter->drawRect(QRectF(3.5, 12.5, 11, 1));
+                break;
+            }
+
+            case DecorationButtonType::ContextHelp:
+            {
+                QPainterPath path;
+                path.moveTo(5, 6);
+                path.arcTo(QRectF(5, 3.5, 8, 5), 180, -180);
+                path.cubicTo(QPointF(12.5, 9.5), QPointF(9, 7.5), QPointF(9, 11.5));
+                painter->drawPath(path);
+
+                painter->drawRect(QRectF(9, 15, 0.5, 0.5));
+                break;
+            }
+
+            default: break;
+        }
     }
 
     //__________________________________________________________________
