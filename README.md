@@ -1,123 +1,95 @@
-# Sierra Breeze Enhanced
+# Kustom Breeze Enhanced
+A spiced-up remix of Sierra Breeze Enhanced—now with extra usability, fresh button styles, and a bit of tastefully applied chaos.
 
-**Ported to Plasma 6 (community mantained)**
+#### Tweaks
+- **Clickable Corners & Edges ("Magic Corners")**
+Fitts’s Law enjoyers, rejoice. The corners and edges are now hit targets, just like the Windows Start button or every theme that respects sanity. Breeze? Yes. BreezeEnhanced? Yes. SierraBreezeEnhanced had it—then someone thought it was a bug and axed it. I'm putting it back where it belongs.
 
-Be aware that this README file needs an update.
+- Opacity based Titlebar text (Window title/caption) color.
+Tailored for translucent themes: the window title now picks up just a hint of background color. It’s subtle, it’s slick, and it keeps the caption from looking like it’s floating in a void.
 
-## Overview
+- Darker titlebar - `#121212`
+To blend with my [Zephyr Kvantum](https://github.com/Rudraksh88/zephyr-kvantum) dark theme. Combined with a matched opacity drop (to offset Kvantum’s opacity values), it pulls off that clean, frameless aesthetic we all love.
 
-Sierra Breeze Enhanced started as a fork of Breeze Enhanced decoration. It has the following main features:
+#### New Button Styles
+- **Plasma**
+The classic, reimagined with flair. The buttons now glow to full opacity on hover. And for the 'Always on top' button, added a custom hollow/filled dot that looks right at home in the titlebar.
+![Plasma](screenshots/plasma.gif)
+- **Mac Mono**
+A monochrome version of the macOS Sierra theme. And they also are opacity-based so doesn't look out of place in a translucent theme. The 'Always on top' here is only visible on hover/active as mac themes look better with the traditional 3 button setup.
+![Mac Mono Animated](screenshots/macAnim.gif)
+![Mac Mono](screenshots/mac.gif)
+- **Zephyr**
+My own original flavor. Originally lived in a personal fork of BreezeEnhanced called [Zephyr](https://github.com/Rudraksh88/zephyr). That got borked by `KDecoration3`, so I gave it a new home here. Now with all the new SBE goodness baked in.
+![Zephyr](screenshots/zephyr.gif)
 
- * Button style options: Plasma / Gnome / macOS Sierra / macOS Dark Aurorae / SBE Sierra themes / SBE Dark Aurorae themes / Color Symbols themes / Monochrome Symbols themes (Note: the application menu button is considered special and does not change).
- * Button spacing and padding Options.
- * Button hovering animation.
- * Option to make all button symbols to appear at unison on hovering (Note: it does not apply to symbol themes).
- * Titlebar style options: SBE own style of Line Separation between Titlebar and Window / Match Titlebar color to Window color / Hide Titlebar under certain circumstances (Never/Maximization/Any Maximization (including H/V)/Always) / Gradient Adjustments / Opacity Adjustments.
- * Specific Shadow settings for inactive windows
- 
- 
-### Screenshot of SBE Sierra theme (or How it All started...)
+#### Rest all of the existing goodness from SBE remains ✨
 
+## ⚙️ Installation
+After installing, you’ll need to restart KWin for the decoration to show up:
 
-![Active Buttons](screenshots/ActiveButtons.gif?raw=true "Active Buttons")
-![Inactive Buttons](screenshots/InactiveButtons.gif?raw=true "Inactive Buttons")
+On X11: run `kwin_x11 --replace`
+On Wayland: run `kwin_wayland --replace`
 
+You can run that from KRunner (Alt+Space or Alt+F2), or just log out and back in like it's 2005. Once that’s done, you’ll find Sierra Breeze Enhanced in:
+**System Settings → Colors & Themes → Window Decorations**
 
-### Screenshot of Settings
+## 🧰 Build from Source
+> ⚠️ Requires Plasma 6.3 or later.
 
-
-![SBE Settings](screenshots/SBE_settings.png?raw=true "SBE Settings")
-
-
-## Installation
-
-Please note that after installing, you need to restart KWin by executing either `kwin_x11 --replace` or `kwin_wayland --replace` in krunner (depending on whether your session runs upon X11 or Wayland). Alternatively, restarting the KDE session is obviously also an option. Then, Sierra Breeze Enhanced will appear in *System Settings &rarr; Application Style &rarr; Window Decorations*.
-
-### Method 1: Install prebuilt packages
-- Ubuntu:
-```sh
-sudo add-apt-repository ppa:krisives/sierrabreezeenhanced
-sudo apt update
-sudo apt install sierrabreezeenhanced
-```
-- openSUSE:
-```sh
-sudo zypper ar obs://home:trmdi trmdi
-sudo zypper in SierraBreezeEnhanced
-```
-- Arch Linux:
-```
-git clone https://aur.archlinux.org/kwin-decoration-sierra-breeze-enhanced-git.git
-cd kwin-decoration-sierra-breeze-enhanced-git
-makepkg -si
-cd ..
-rm -rf kwin-decoration-sierra-breeze-enhanced-git
-```
-
-- Alpine Linux:
-``` shell
-sudo echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
-sudo apk update
-sudo apk add sierrabreezeenhanced
-```
-
-### Method 2: Compile from source code
-*Compilation should NOT be done against versions of Plasma < 6.3\*
-
-#### Step 1: Build dependencies
-
-- Ubuntu
-``` shell
+### Step 1: Install Dependencies
+#### Ubuntu/Debian
+```bash
 sudo apt install build-essential libkf6config-dev libkdecorations2-dev qtdeclarative6-dev extra-cmake-modules libkf6guiaddons-dev libkf6configwidgets-dev libkf6windowsystem-dev libkf6coreaddons-dev libkf6iconthemes-dev gettext cmake
 ```
-- Arch Linux
-``` shell
-sudo pacman -S base-devel # Required development packages
-sudo pacman -S kdecoration qt6-declarative    # Decoration
-sudo pacman -S cmake extra-cmake-modules                    # Installation
+
+#### Arch
+```bash
+sudo pacman -S base-devel
+sudo pacman -S kdecoration qt6-declarative
+sudo pacman -S cmake extra-cmake-modules
 ```
-- Fedora
-``` shell
+
+#### Fedora
+```bash
 sudo dnf install cmake extra-cmake-modules kf6-kiconthemes-devel
 sudo dnf install "cmake(Qt6Core)" "cmake(Qt6Gui)" "cmake(Qt6DBus)" "cmake(KF6GuiAddons)" "cmake(KF6WindowSystem)" "cmake(KF6I18n)" "cmake(KDecoration3)" "cmake(KF6CoreAddons)" "cmake(KF6ConfigWidgets)"
 sudo dnf install qt6-qt5compat-devel kf6-kcmutils-devel qt6-qtbase-private-devel
 ```
 
-- Alpine Linux
-``` shell
+#### Alpine
+```bash
 sudo apk add extra-cmake-modules qt6-qtbase-dev qt6-qt5compat-dev kcmutils-dev kdecoration-dev kcoreaddons-dev kguiaddons-dev kconfigwidgets-dev kwindowsystem-dev ki18n-dev kiconthemes-dev
 ```
 
-#### Step 2: Then compile and install
-- Install from script:
-```sh
+### Step 2: Compile & Install
+#### Easy Mode™ – With Script
+```bash
 chmod +x install.sh
 ./install.sh
 ```
-- Or more manually:
-Open a terminal inside the source directory and do:
-```sh
+
+#### Manual Mode
+```bash
 mkdir build && cd build
 cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DKDE_INSTALL_LIBDIR=lib -DBUILD_TESTING=OFF -DKDE_INSTALL_USE_QT_SYS_PATHS=ON
 make
 sudo make install
 ```
 
-
-## Uninstall
-
-- Method 1: Use your Package manager
-- Method 2: Run the uninstall script
-```sh
+## 🗑️ Uninstall
+- If you installed via the script, just run `./uninstall.sh` in the same directory.
+```bash
 chmod +x uninstall.sh
 ./uninstall.sh
 ```
-- Method 3: or manually if previously ran the install script
-```sh
+
+- If you installed manually, run:
+```bash
 cd build
 sudo make uninstall
 ```
 
-
 ## Credits
-Breeze, Sierra Breeze and Breeze Enhanced for obvious reasons :)
+Shoutout to the original Breeze, Sierra Breeze, and Breeze Enhanced—this wouldn’t exist without them.
+I just added some extra spice.
