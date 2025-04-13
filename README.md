@@ -1,29 +1,29 @@
 # Kustom Breeze Enhanced
 A spiced-up remix of Sierra Breeze Enhanced—now with extra usability, fresh button styles, and a bit of tastefully applied chaos.
 
-#### Tweaks
-- **Clickable Corners & Edges ("Magic Corners")**
+#### 🔧 Tweaks
+- **Clickable Corners & Edges ("Magic Corners")**  
 Fitts’s Law enjoyers, rejoice. The corners and edges are now hit targets, just like the Windows Start button or every theme that respects sanity. Breeze? Yes. BreezeEnhanced? Yes. SierraBreezeEnhanced had it—then someone thought it was a bug and axed it. I'm putting it back where it belongs.
 
-- Opacity based Titlebar text (Window title/caption) color.
-Tailored for translucent themes: the window title now picks up just a hint of background color. It’s subtle, it’s slick, and it keeps the caption from looking like it’s floating in a void.
+- **Opacity-based Titlebar text (Window title/caption) color**  
+Tailored for translucent themes: The window title now picks up just a hint of background color. It’s subtle, it’s slick, and it keeps the caption from looking like it’s floating in a void.
 
-- Darker titlebar - `#121212`
+- **Darker titlebar - `#121212`**  
 To blend with my [Zephyr Kvantum](https://github.com/Rudraksh88/zephyr-kvantum) dark theme. Combined with a matched opacity drop (to offset Kvantum’s opacity values), it pulls off that clean, frameless aesthetic we all love.
 
-#### New Button Styles
-- **Plasma**
+#### ✨ New Button Styles
+- **Plasma**  
 The classic, reimagined with flair. The buttons now glow to full opacity on hover. And for the 'Always on top' button, added a custom hollow/filled dot that looks right at home in the titlebar.
 ![Plasma](screenshots/plasma.gif)
-- **Mac Mono**
+- **Mac Mono**  
 A monochrome version of the macOS Sierra theme. And they also are opacity-based so doesn't look out of place in a translucent theme. The 'Always on top' here is only visible on hover/active as mac themes look better with the traditional 3 button setup.
 ![Mac Mono Animated](screenshots/macAnim.gif)
 ![Mac Mono](screenshots/mac.gif)
-- **Zephyr**
-My own original flavor. Originally lived in a personal fork of BreezeEnhanced called [Zephyr](https://github.com/Rudraksh88/zephyr). That got borked by `KDecoration3`, so I gave it a new home here. Now with all the new SBE goodness baked in.
+- **Zephyr**  
+My original flavor. Originally lived in a personal fork of BreezeEnhanced called [Zephyr](https://github.com/Rudraksh88/zephyr). That got borked by `KDecoration3`, so I gave it a new home here. Now with all the new SBE goodness baked in.
 ![Zephyr](screenshots/zephyr.gif)
 
-#### Rest all of the existing goodness from SBE remains ✨
+#### Rest all of the existing goodness from SBE remains 🌈
 
 ## ⚙️ Installation
 After installing, you’ll need to restart KWin for the decoration to show up:
@@ -89,6 +89,18 @@ chmod +x uninstall.sh
 cd build
 sudo make uninstall
 ```
+
+## 💰 Support
+This theme was handcrafted with 100% ethically sourced, sustainably brewed coffee—and a need for aesthetic justice.
+
+If it made your desktop a little more delightful (it definitely did), feel free to send over a coffee, a snack, or a cold one. Donations may or may not unlock bonus features, but they will unlock a grin.
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Donate-orange.svg?style=flat&logo=buy-me-a-coffee)](https://www.buymeacoffee.com/rudraksh.tripathi)
+
+[![PayPal](https://img.shields.io/badge/PayPal-Donate-blue.svg?style=flat&logo=paypal)](https://www.paypal.me/rudrakshtripathi)
+
+**Only for India** UPI: `rudraksh-tripathi@ibl`
+
 
 ## Credits
 Shoutout to the original Breeze, Sierra Breeze, and Breeze Enhanced—this wouldn’t exist without them.
