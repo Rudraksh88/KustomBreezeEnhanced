@@ -2,7 +2,7 @@ project(sierrabreezeenhanced)
 set(PROJECT_VERSION "2.1.0")
 set(PROJECT_VERSION_MAJOR 0)
 
-cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.5)
 
 include(WriteBasicConfigVersionFile)
 include(FeatureSummary)
@@ -50,7 +50,7 @@ find_package(
   KF6 ${KF6_MIN_VERSION} REQUIRED COMPONENTS IconThemes CoreAddons GuiAddons
                                              ConfigWidgets WindowSystem I18n)
 find_package(Qt${QT_MAJOR_VERSION} ${QT_MIN_VERSION} CONFIG REQUIRED
-             COMPONENTS Widgets DBus)
+             COMPONENTS Widgets DBus GuiPrivate)
 find_package(Qt6 REQUIRED COMPONENTS Core5Compat)
 
 # XCB

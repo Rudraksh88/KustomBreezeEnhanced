@@ -90,6 +90,17 @@ cd build
 sudo make uninstall
 ```
 
+# Support
+This theme was handcrafted with 100% ethically sourced, sustainably brewed coffee—and a need for aesthetic justice.
+
+If it made your desktop a little more delightful (it definitely did), feel free to send over a coffee, a snack, or a cold one. Donations may or may not unlock bonus features, but they will unlock a grin.
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Donate-orange.svg?style=flat&logo=buy-me-a-coffee)](https://www.buymeacoffee.com/rudraksh.tripathi)
+
+[![PayPal](https://img.shields.io/badge/PayPal-Donate-blue.svg?style=flat&logo=paypal)](https://www.paypal.me/rudrakshtripathi)
+
+**Only for India** UPI: `rudraksh-tripathi@ibl`
+
 ## Credits
 Shoutout to the original Breeze, Sierra Breeze, and Breeze Enhanced—this wouldn’t exist without them.
 I just added some extra spice.
