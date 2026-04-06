@@ -391,9 +391,19 @@
          </widget>
         </item>
         <item row="0" column="4">
+         <widget class="QCheckBox" name="showTitleBarIcon">
+          <property name="text">
+           <string>Show icon</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="5">
          <widget class="QLabel" name="titleBarIconSizeLabel">
           <property name="text">
-           <string>Icon size:</string>
+           <string>Size:</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -403,7 +413,7 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="5">
+        <item row="0" column="6">
          <widget class="QSpinBox" name="titleBarIconSize">
           <property name="suffix">
            <string> %</string>
@@ -419,7 +429,7 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="6">
+        <item row="0" column="7">
          <widget class="QLabel" name="titleBarIconSpacingLabel">
           <property name="text">
            <string>Spacing:</string>
@@ -432,7 +442,7 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="7">
+        <item row="0" column="8">
          <widget class="QSpinBox" name="titleBarIconSpacing">
           <property name="suffix">
            <string> px</string>
@@ -853,11 +863,12 @@
   <tabstops>
    <tabstop>tabWidget</tabstop>
    <tabstop>titleAlignment</tabstop>
+   <tabstop>showTitleBarIcon</tabstop>
    <tabstop>titleBarIconSize</tabstop>
    <tabstop>titleBarIconSpacing</tabstop>
    <tabstop>buttonSize</tabstop>
-  <tabstop>buttonStyle</tabstop>
-  <tabstop>buttonSpacing</tabstop>
+   <tabstop>buttonStyle</tabstop>
+   <tabstop>buttonSpacing</tabstop>
   <tabstop>buttonPadding</tabstop>
   <tabstop>hOffset</tabstop>
   <tabstop>hideTitleBar</tabstop>
@@ -1070,7 +1081,71 @@
      <x>20</x>
      <y>20</y>
     </hint>
-   </hints>
-  </connection>
- </connections>
-</ui>
+    </hints>
+   </connection>
+   <connection>
+    <sender>showTitleBarIcon</sender>
+    <signal>toggled(bool)</signal>
+    <receiver>titleBarIconSize</receiver>
+    <slot>setEnabled(bool)</slot>
+    <hints>
+     <hint type="sourcelabel">
+      <x>20</x>
+      <y>20</y>
+     </hint>
+     <hint type="destinationlabel">
+      <x>20</x>
+      <y>20</y>
+     </hint>
+    </hints>
+   </connection>
+   <connection>
+    <sender>showTitleBarIcon</sender>
+    <signal>toggled(bool)</signal>
+    <receiver>titleBarIconSizeLabel</receiver>
+    <slot>setEnabled(bool)</slot>
+    <hints>
+     <hint type="sourcelabel">
+      <x>20</x>
+      <y>20</y>
+     </hint>
+     <hint type="destinationlabel">
+      <x>20</x>
+      <y>20</y>
+     </hint>
+    </hints>
+   </connection>
+   <connection>
+    <sender>showTitleBarIcon</sender>
+    <signal>toggled(bool)</signal>
+    <receiver>titleBarIconSpacing</receiver>
+    <slot>setEnabled(bool)</slot>
+    <hints>
+     <hint type="sourcelabel">
+      <x>20</x>
+      <y>20</y>
+     </hint>
+     <hint type="destinationlabel">
+      <x>20</x>
+      <y>20</y>
+     </hint>
+    </hints>
+   </connection>
+   <connection>
+    <sender>showTitleBarIcon</sender>
+    <signal>toggled(bool)</signal>
+    <receiver>titleBarIconSpacingLabel</receiver>
+    <slot>setEnabled(bool)</slot>
+    <hints>
+     <hint type="sourcelabel">
+      <x>20</x>
+      <y>20</y>
+     </hint>
+     <hint type="destinationlabel">
+      <x>20</x>
+      <y>20</y>
+     </hint>
+    </hints>
+   </connection>
+  </connections>
+ </ui>

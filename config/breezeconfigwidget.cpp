@@ -46,6 +46,7 @@ ConfigWidget::ConfigWidget(QObject *parent, const KPluginMetaData &data, const Q
 
     // track ui changes
     connect(m_ui.titleAlignment, SIGNAL(currentIndexChanged(int)), SLOT(updateChanged()));
+    connect(m_ui.showTitleBarIcon, &QAbstractButton::clicked, this, &ConfigWidget::updateChanged);
     connect(m_ui.titleBarIconSize, SIGNAL(valueChanged(int)), SLOT(updateChanged()));
     connect(m_ui.titleBarIconSpacing, SIGNAL(valueChanged(int)), SLOT(updateChanged()));
     connect(m_ui.buttonSize, SIGNAL(currentIndexChanged(int)), SLOT(updateChanged()));
@@ -100,6 +101,7 @@ void ConfigWidget::load()
 
     // assign to ui
     m_ui.titleAlignment->setCurrentIndex(m_internalSettings->titleAlignment());
+    m_ui.showTitleBarIcon->setChecked(m_internalSettings->showTitleBarIcon());
     m_ui.titleBarIconSize->setValue(m_internalSettings->titleBarIconSize());
     m_ui.titleBarIconSpacing->setValue(m_internalSettings->titleBarIconSpacing());
     m_ui.buttonSize->setCurrentIndex(m_internalSettings->buttonSize());
@@ -155,6 +157,7 @@ void ConfigWidget::save()
 
     // apply modifications from ui
     m_internalSettings->setTitleAlignment(m_ui.titleAlignment->currentIndex());
+    m_internalSettings->setShowTitleBarIcon(m_ui.showTitleBarIcon->isChecked());
     m_internalSettings->setTitleBarIconSize(m_ui.titleBarIconSize->value());
     m_internalSettings->setTitleBarIconSpacing(m_ui.titleBarIconSpacing->value());
     m_internalSettings->setButtonSize(m_ui.buttonSize->currentIndex());
@@ -220,6 +223,7 @@ void ConfigWidget::defaults()
 
     // assign to ui
     m_ui.titleAlignment->setCurrentIndex(m_internalSettings->titleAlignment());
+    m_ui.showTitleBarIcon->setChecked(m_internalSettings->showTitleBarIcon());
     m_ui.titleBarIconSize->setValue(m_internalSettings->titleBarIconSize());
     m_ui.titleBarIconSpacing->setValue(m_internalSettings->titleBarIconSpacing());
     m_ui.buttonSize->setCurrentIndex(m_internalSettings->buttonSize());
@@ -265,6 +269,8 @@ void ConfigWidget::updateChanged()
     bool modified(false);
 
     if (m_ui.titleAlignment->currentIndex() != m_internalSettings->titleAlignment())
+        modified = true;
+    else if (m_ui.showTitleBarIcon->isChecked() != m_internalSettings->showTitleBarIcon())
         modified = true;
     else if (m_ui.titleBarIconSize->value() != m_internalSettings->titleBarIconSize())
         modified = true;

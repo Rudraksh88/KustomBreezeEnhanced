@@ -1043,15 +1043,20 @@ void Decoration::paintTitleBar(QPainter *painter, const QRectF &repaintRegion)
         const int iconX = textX - iconSpacing - iconSize;
         const QRect iconRect(iconX, iconY, iconSize, iconSize);
 
-        // Only draw icon if size > 0
-        if (iconSize > 0) {
-            // Paint the window icon with proper palette
+        // Only draw icon if enabled and size > 0
+        if (m_internalSettings->showTitleBarIcon() && iconSize > 0) {
+            // Paint the window icon with proper palette and high quality rendering
             painter->save();
+            painter->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
             const QPalette activePalette = KIconLoader::global()->customPalette();
             QPalette palette = c->palette();
             palette.setColor(QPalette::WindowText, fontColor());
             KIconLoader::global()->setCustomPalette(palette);
-            c->icon().paint(painter, iconRect);
+            // Request icon at a larger size for better quality when scaling down
+            const int requestSize = iconSize * 2;
+            const QIcon icon = c->icon();
+            const QPixmap pixmap = icon.pixmap(requestSize, requestSize);
+            painter->drawPixmap(iconRect, pixmap);
             if (activePalette == QPalette()) {
                 KIconLoader::global()->resetPalette();
             } else {

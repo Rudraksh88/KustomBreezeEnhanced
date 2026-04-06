@@ -88,6 +88,11 @@
       <default>AlignCenterFullWidth</default>
     </entry>
 
+    <!-- show titlebar icon next to title -->
+    <entry name="ShowTitleBarIcon" type = "Bool">
+      <default>true</default>
+    </entry>
+
     <!-- titlebar icon size (percentage of caption height) -->
     <entry name="TitleBarIconSize" type = "Int">
       <default>80</default>
