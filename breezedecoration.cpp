@@ -1021,7 +1021,6 @@ void Decoration::paintTitleBar(QPainter *painter, const QRectF &repaintRegion)
         painter->setPen(fontColor());
 
         const auto cR = captionRect();
-        const QString caption = painter->fontMetrics().elidedText(c->caption(), Qt::ElideMiddle, cR.first.width());
 
         // Calculate icon dimensions
         const int iconSize = titleBarIconSize();
@@ -1032,15 +1031,21 @@ void Decoration::paintTitleBar(QPainter *painter, const QRectF &repaintRegion)
         // Total width of icon + spacing (if icon is shown)
         const int iconTotalWidth = showIcon ? (iconSize + iconSpacing) : 0;
 
+        // Limit text to 60% of available width, also accounting for icon if shown
+        const int availableWidth = cR.first.width();
+        const int maxTextWidth = qMax(0, static_cast<int>(availableWidth * 0.6) - iconTotalWidth);
+        const QString caption = painter->fontMetrics().elidedText(c->caption(), Qt::ElideMiddle, maxTextWidth);
+
         // Calculate the actual text position based on alignment
         const int textWidth = painter->fontMetrics().horizontalAdvance(caption);
-        int textX = cR.first.left(); // default for left alignment
+        const int combinedWidth = iconTotalWidth + textWidth;
+
+        int textX;
 
         if (cR.second & Qt::AlignHCenter) {
             // Center aligned
             if (iconIncludedInAlignment) {
                 // Center the combined (icon + spacing + text) width
-                const int combinedWidth = iconTotalWidth + textWidth;
                 textX = cR.first.left() + (cR.first.width() - combinedWidth) / 2 + iconTotalWidth;
             } else {
                 // Center only the text (icon placed to its left)
@@ -1049,16 +1054,27 @@ void Decoration::paintTitleBar(QPainter *painter, const QRectF &repaintRegion)
         } else if (cR.second & Qt::AlignRight) {
             // Right aligned
             textX = cR.first.right() - textWidth;
+        } else {
+            // Left aligned
+            textX = cR.first.left() + iconTotalWidth;
         }
-        // For Qt::AlignLeft, textX stays at cR.first.left()
+
+        // For center alignment with icon, ensure icon doesn't go past left boundary
+        // but don't clamp the right side - text truncation handles that
+        if (showIcon && (cR.second & Qt::AlignHCenter)) {
+            const int minTextX = cR.first.left() + iconTotalWidth;
+            if (textX < minTextX) {
+                textX = minTextX;
+            }
+        }
 
         // draw app icon just before the title text
         const int iconY = cR.first.top() + (cR.first.height() - iconSize) / 2;
         const int iconX = textX - iconSpacing - iconSize;
         const QRect iconRect(iconX, iconY, iconSize, iconSize);
 
-        // Only draw icon if enabled and size > 0
-        if (showIcon) {
+        // Only draw icon if enabled, size > 0, and icon fits within bounds
+        if (showIcon && iconX >= cR.first.left()) {
             // Paint the window icon with proper palette and high quality rendering
             painter->save();
             painter->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
@@ -1080,9 +1096,9 @@ void Decoration::paintTitleBar(QPainter *painter, const QRectF &repaintRegion)
         }
 
         // draw caption text
-        // When icon is included in alignment, we must draw at the calculated textX position
+        // When icon is shown, we draw at calculated textX position
         // Otherwise, use Qt's alignment within the rect
-        if (iconIncludedInAlignment) {
+        if (showIcon) {
             // Draw text at specific X position, vertically centered
             const int textY = cR.first.top() + (cR.first.height() + painter->fontMetrics().ascent() - painter->fontMetrics().descent()) / 2;
             painter->drawText(textX, textY, caption);
@@ -1152,6 +1168,13 @@ QPair<QRect, Qt::Alignment> Decoration::captionRect() const
         const int yOffset = settings()->smallSpacing() * Metrics::TitleBar_TopMargin;
         const QRect maxRect(leftOffset, yOffset, size().width() - leftOffset - rightOffset, captionHeight());
 
+        // Calculate icon width contribution for bounding rect calculations
+        const int iconSize = titleBarIconSize();
+        const int iconSpacing = m_internalSettings->titleBarIconSpacing();
+        const bool showIcon = m_internalSettings->showTitleBarIcon() && iconSize > 0;
+        const bool iconIncludedInAlignment = m_internalSettings->iconIncludedInAlignment() && showIcon;
+        const int iconTotalWidth = (showIcon && iconIncludedInAlignment) ? (iconSize + iconSpacing) : 0;
+
         switch (m_internalSettings->titleAlignment()) {
         case InternalSettings::AlignLeft:
             return qMakePair(maxRect, Qt::AlignVCenter | Qt::AlignLeft);
@@ -1164,21 +1187,37 @@ QPair<QRect, Qt::Alignment> Decoration::captionRect() const
 
         default:
         case InternalSettings::AlignCenterFullWidth: {
-            // full caption rect
+            // full caption rect - used when content can be centered without overlapping buttons
             const QRect fullRect = QRect(0, yOffset, size().width(), captionHeight());
             QRect boundingRect(settings()->fontMetrics().boundingRect(c->caption()).toRect());
 
-            // text bounding rect
+            // text bounding rect - include icon width if icon is shown and included in alignment
+            const int totalContentWidth = boundingRect.width() + iconTotalWidth;
+            boundingRect.setWidth(totalContentWidth);
             boundingRect.setTop(yOffset);
             boundingRect.setHeight(captionHeight());
-            boundingRect.moveLeft((size().width() - boundingRect.width()) / 2);
+            boundingRect.moveLeft((size().width() - totalContentWidth) / 2);
 
-            if (boundingRect.left() < leftOffset)
-                return qMakePair(maxRect, Qt::AlignVCenter | Qt::AlignLeft);
-            else if (boundingRect.right() > size().width() - rightOffset)
-                return qMakePair(maxRect, Qt::AlignVCenter | Qt::AlignRight);
-            else
-                return qMakePair(fullRect, Qt::AlignCenter);
+            // Calculate available space between buttons
+            const int availableSpace = maxRect.width();
+
+            // Check if content fits within available space between buttons
+            if (totalContentWidth <= availableSpace) {
+                // Content fits - check if we can center it without overlap
+                const bool overlapsLeft = boundingRect.left() < leftOffset;
+                const bool overlapsRight = boundingRect.right() > size().width() - rightOffset;
+
+                if (!overlapsLeft && !overlapsRight) {
+                    // Perfect - centered content doesn't overlap either side
+                    return qMakePair(fullRect, Qt::AlignCenter);
+                } else {
+                    // Content fits but centered position overlaps - center within maxRect instead
+                    return qMakePair(maxRect, Qt::AlignCenter);
+                }
+            } else {
+                // Content doesn't fit - needs truncation, center within maxRect
+                return qMakePair(maxRect, Qt::AlignCenter);
+            }
         }
         }
     }
