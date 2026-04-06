@@ -93,6 +93,11 @@
       <default>true</default>
     </entry>
 
+    <!-- include icon in title alignment calculation -->
+    <entry name="IconIncludedInAlignment" type = "Bool">
+      <default>true</default>
+    </entry>
+
     <!-- titlebar icon size (percentage of caption height) -->
     <entry name="TitleBarIconSize" type = "Int">
       <default>80</default>

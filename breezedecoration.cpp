@@ -1023,13 +1023,29 @@ void Decoration::paintTitleBar(QPainter *painter, const QRectF &repaintRegion)
         const auto cR = captionRect();
         const QString caption = painter->fontMetrics().elidedText(c->caption(), Qt::ElideMiddle, cR.first.width());
 
+        // Calculate icon dimensions
+        const int iconSize = titleBarIconSize();
+        const int iconSpacing = m_internalSettings->titleBarIconSpacing();
+        const bool showIcon = m_internalSettings->showTitleBarIcon() && iconSize > 0;
+        const bool iconIncludedInAlignment = m_internalSettings->iconIncludedInAlignment() && showIcon;
+
+        // Total width of icon + spacing (if icon is shown)
+        const int iconTotalWidth = showIcon ? (iconSize + iconSpacing) : 0;
+
         // Calculate the actual text position based on alignment
         const int textWidth = painter->fontMetrics().horizontalAdvance(caption);
         int textX = cR.first.left(); // default for left alignment
 
         if (cR.second & Qt::AlignHCenter) {
             // Center aligned
-            textX = cR.first.left() + (cR.first.width() - textWidth) / 2;
+            if (iconIncludedInAlignment) {
+                // Center the combined (icon + spacing + text) width
+                const int combinedWidth = iconTotalWidth + textWidth;
+                textX = cR.first.left() + (cR.first.width() - combinedWidth) / 2 + iconTotalWidth;
+            } else {
+                // Center only the text (icon placed to its left)
+                textX = cR.first.left() + (cR.first.width() - textWidth) / 2;
+            }
         } else if (cR.second & Qt::AlignRight) {
             // Right aligned
             textX = cR.first.right() - textWidth;
@@ -1037,14 +1053,12 @@ void Decoration::paintTitleBar(QPainter *painter, const QRectF &repaintRegion)
         // For Qt::AlignLeft, textX stays at cR.first.left()
 
         // draw app icon just before the title text
-        const int iconSize = titleBarIconSize();
-        const int iconSpacing = m_internalSettings->titleBarIconSpacing();
         const int iconY = cR.first.top() + (cR.first.height() - iconSize) / 2;
         const int iconX = textX - iconSpacing - iconSize;
         const QRect iconRect(iconX, iconY, iconSize, iconSize);
 
         // Only draw icon if enabled and size > 0
-        if (m_internalSettings->showTitleBarIcon() && iconSize > 0) {
+        if (showIcon) {
             // Paint the window icon with proper palette and high quality rendering
             painter->save();
             painter->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
@@ -1066,7 +1080,15 @@ void Decoration::paintTitleBar(QPainter *painter, const QRectF &repaintRegion)
         }
 
         // draw caption text
-        painter->drawText(cR.first, cR.second | Qt::TextSingleLine, caption);
+        // When icon is included in alignment, we must draw at the calculated textX position
+        // Otherwise, use Qt's alignment within the rect
+        if (iconIncludedInAlignment) {
+            // Draw text at specific X position, vertically centered
+            const int textY = cR.first.top() + (cR.first.height() + painter->fontMetrics().ascent() - painter->fontMetrics().descent()) / 2;
+            painter->drawText(textX, textY, caption);
+        } else {
+            painter->drawText(cR.first, cR.second | Qt::TextSingleLine, caption);
+        }
     }
 }
 
