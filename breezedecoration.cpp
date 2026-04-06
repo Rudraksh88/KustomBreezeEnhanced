@@ -46,6 +46,8 @@
 #include <QTextStream>
 #include <QTimer>
 
+#include <KIconLoader>
+
 #if BREEZE_HAVE_X11
 #include <QtGui/private/qtx11extras_p.h>
 #endif
@@ -1015,12 +1017,50 @@ void Decoration::paintTitleBar(QPainter *painter, const QRectF &repaintRegion)
         m_rightButtons->paint(painter, repaintRegion);
 
         // draw caption
-
         painter->setFont(s->font());
         painter->setPen(fontColor());
 
         const auto cR = captionRect();
         const QString caption = painter->fontMetrics().elidedText(c->caption(), Qt::ElideMiddle, cR.first.width());
+
+        // Calculate the actual text position based on alignment
+        const int textWidth = painter->fontMetrics().horizontalAdvance(caption);
+        int textX = cR.first.left(); // default for left alignment
+
+        if (cR.second & Qt::AlignHCenter) {
+            // Center aligned
+            textX = cR.first.left() + (cR.first.width() - textWidth) / 2;
+        } else if (cR.second & Qt::AlignRight) {
+            // Right aligned
+            textX = cR.first.right() - textWidth;
+        }
+        // For Qt::AlignLeft, textX stays at cR.first.left()
+
+        // draw app icon just before the title text
+        const int iconSize = titleBarIconSize();
+        const int iconSpacing = m_internalSettings->titleBarIconSpacing();
+        const int iconY = cR.first.top() + (cR.first.height() - iconSize) / 2;
+        const int iconX = textX - iconSpacing - iconSize;
+        const QRect iconRect(iconX, iconY, iconSize, iconSize);
+
+        // Only draw icon if size > 0
+        if (iconSize > 0) {
+            // Paint the window icon with proper palette
+            painter->save();
+            const QPalette activePalette = KIconLoader::global()->customPalette();
+            QPalette palette = c->palette();
+            palette.setColor(QPalette::WindowText, fontColor());
+            KIconLoader::global()->setCustomPalette(palette);
+            c->icon().paint(painter, iconRect);
+            if (activePalette == QPalette()) {
+                KIconLoader::global()->resetPalette();
+            } else {
+                KIconLoader::global()->setCustomPalette(activePalette);
+            }
+            painter->restore();
+        }
+
+        // draw caption text
         painter->drawText(cR.first, cR.second | Qt::TextSingleLine, caption);
     }
 }
@@ -1054,6 +1094,14 @@ int Decoration::captionHeight() const
         border = settings()->smallSpacing() * (Metrics::TitleBar_BottomMargin + Metrics::TitleBar_TopMargin);
     }
     return hideTitleBar() ? border : border - settings()->smallSpacing() * (Metrics::TitleBar_BottomMargin + Metrics::TitleBar_TopMargin);
+}
+
+//________________________________________________________________
+int Decoration::titleBarIconSize() const
+{
+    // Icon size based on caption height, controlled by setting (percentage)
+    const int sizePercent = m_internalSettings->titleBarIconSize();
+    return qRound(captionHeight() * sizePercent / 100.0);
 }
 
 //________________________________________________________________

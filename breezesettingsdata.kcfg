@@ -88,6 +88,20 @@
       <default>AlignCenterFullWidth</default>
     </entry>
 
+    <!-- titlebar icon size (percentage of caption height) -->
+    <entry name="TitleBarIconSize" type = "Int">
+      <default>80</default>
+      <min>0</min>
+      <max>100</max>
+    </entry>
+
+    <!-- titlebar icon spacing (pixels) -->
+    <entry name="TitleBarIconSpacing" type = "Int">
+      <default>3</default>
+      <min>0</min>
+      <max>20</max>
+    </entry>
+
     <!-- button size -->
     <entry name="ButtonSize" type="Enum">
       <choices>
