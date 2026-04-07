@@ -1105,12 +1105,12 @@ void Decoration::paintTitleBar(QPainter *painter, const QRectF &repaintRegion)
 
         if (dimAppName) {
             // Look for common separators: " - ", " — " (em dash), " – " (en dash), " | ", " : "
+            // Find the rightmost separator across all types (app name is typically at the end)
             const QStringList separators = {QStringLiteral(" - "), QStringLiteral(" — "), QStringLiteral(" – "), QStringLiteral(" | "), QStringLiteral(" : ")};
             for (const QString &sep : separators) {
                 int idx = caption.lastIndexOf(sep);
-                if (idx != -1) {
+                if (idx > separatorIndex) {
                     separatorIndex = idx;
-                    break;
                 }
             }
         }
