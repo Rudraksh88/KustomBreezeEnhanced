@@ -1198,31 +1198,42 @@ QPair<QRect, Qt::Alignment> Decoration::captionRect() const
             boundingRect.setHeight(captionHeight());
             boundingRect.moveLeft((size().width() - totalContentWidth) / 2);
 
-            // Calculate available space between buttons
-            const int availableSpace = maxRect.width();
+            // Check if centered content would overlap with buttons
+            const bool overlapsLeft = boundingRect.left() < leftOffset;
+            const bool overlapsRight = boundingRect.right() > size().width() - rightOffset;
 
-            // Check if content fits within available space between buttons
-            if (totalContentWidth <= availableSpace) {
-                // Content fits - check if we can center it without overlap
-                const bool overlapsLeft = boundingRect.left() < leftOffset;
-                const bool overlapsRight = boundingRect.right() > size().width() - rightOffset;
-
-                if (!overlapsLeft && !overlapsRight) {
-                    // Perfect - centered content doesn't overlap either side
-                    return qMakePair(fullRect, Qt::AlignCenter);
-                } else {
-                    // Content fits but centered position overlaps - center within maxRect instead
-                    return qMakePair(maxRect, Qt::AlignCenter);
-                }
+            if (!overlapsLeft && !overlapsRight) {
+                // Perfect - centered content doesn't overlap either side
+                return qMakePair(fullRect, Qt::AlignCenter);
             } else {
-                // Content doesn't fit - needs truncation, center within maxRect
-                return qMakePair(maxRect, Qt::AlignCenter);
+                // Content would overlap buttons when centered
+                // Align to the opposite side of where the buttons are
+                const bool hasLeftButtons = !m_leftButtons->buttons().isEmpty();
+                const bool hasRightButtons = !m_rightButtons->buttons().isEmpty();
+
+                if (hasRightButtons && !hasLeftButtons) {
+                    // Buttons on right only - align title to left
+                    return qMakePair(maxRect, Qt::AlignVCenter | Qt::AlignLeft);
+                } else if (hasLeftButtons && !hasRightButtons) {
+                    // Buttons on left only - align title to right
+                    return qMakePair(maxRect, Qt::AlignVCenter | Qt::AlignRight);
+                } else {
+                    // Buttons on both sides - align based on which side has more space
+                    if (leftOffset <= rightOffset) {
+                        // More buttons on right, align left
+                        return qMakePair(maxRect, Qt::AlignVCenter | Qt::AlignLeft);
+                    } else {
+                        // More buttons on left, align right
+                        return qMakePair(maxRect, Qt::AlignVCenter | Qt::AlignRight);
+                    }
+                }
             }
         }
         }
     }
 }
 
+//________________________________________________________________
 //________________________________________________________________
 void Decoration::createShadow()
 {
