@@ -50,6 +50,8 @@ ConfigWidget::ConfigWidget(QObject *parent, const KPluginMetaData &data, const Q
     connect(m_ui.titleBarIconSize, SIGNAL(valueChanged(int)), SLOT(updateChanged()));
     connect(m_ui.titleBarIconSpacing, SIGNAL(valueChanged(int)), SLOT(updateChanged()));
     connect(m_ui.iconIncludedInAlignment, &QAbstractButton::clicked, this, &ConfigWidget::updateChanged);
+    connect(m_ui.dimAppName, &QAbstractButton::clicked, this, &ConfigWidget::updateChanged);
+    connect(m_ui.appNameOpacity, SIGNAL(valueChanged(int)), SLOT(updateChanged()));
     connect(m_ui.buttonSize, SIGNAL(currentIndexChanged(int)), SLOT(updateChanged()));
     connect(m_ui.buttonSpacing, QOverload<int>::of(&QSpinBox::valueChanged), [this](int /*i*/) {
         updateChanged();
@@ -106,6 +108,8 @@ void ConfigWidget::load()
     m_ui.titleBarIconSize->setValue(m_internalSettings->titleBarIconSize());
     m_ui.titleBarIconSpacing->setValue(m_internalSettings->titleBarIconSpacing());
     m_ui.iconIncludedInAlignment->setChecked(m_internalSettings->iconIncludedInAlignment());
+    m_ui.dimAppName->setChecked(m_internalSettings->dimAppName());
+    m_ui.appNameOpacity->setValue(m_internalSettings->appNameOpacity());
     m_ui.buttonSize->setCurrentIndex(m_internalSettings->buttonSize());
     m_ui.buttonSpacing->setValue(m_internalSettings->buttonSpacing());
     m_ui.buttonPadding->setValue(m_internalSettings->buttonPadding());
@@ -163,6 +167,8 @@ void ConfigWidget::save()
     m_internalSettings->setTitleBarIconSize(m_ui.titleBarIconSize->value());
     m_internalSettings->setTitleBarIconSpacing(m_ui.titleBarIconSpacing->value());
     m_internalSettings->setIconIncludedInAlignment(m_ui.iconIncludedInAlignment->isChecked());
+    m_internalSettings->setDimAppName(m_ui.dimAppName->isChecked());
+    m_internalSettings->setAppNameOpacity(m_ui.appNameOpacity->value());
     m_internalSettings->setButtonSize(m_ui.buttonSize->currentIndex());
     m_internalSettings->setButtonSpacing(m_ui.buttonSpacing->value());
     m_internalSettings->setButtonPadding(m_ui.buttonPadding->value());
@@ -230,6 +236,8 @@ void ConfigWidget::defaults()
     m_ui.titleBarIconSize->setValue(m_internalSettings->titleBarIconSize());
     m_ui.titleBarIconSpacing->setValue(m_internalSettings->titleBarIconSpacing());
     m_ui.iconIncludedInAlignment->setChecked(m_internalSettings->iconIncludedInAlignment());
+    m_ui.dimAppName->setChecked(m_internalSettings->dimAppName());
+    m_ui.appNameOpacity->setValue(m_internalSettings->appNameOpacity());
     m_ui.buttonSize->setCurrentIndex(m_internalSettings->buttonSize());
     m_ui.buttonSpacing->setValue(m_internalSettings->buttonSpacing());
     m_ui.buttonPadding->setValue(m_internalSettings->buttonPadding());
@@ -281,6 +289,10 @@ void ConfigWidget::updateChanged()
     else if (m_ui.titleBarIconSpacing->value() != m_internalSettings->titleBarIconSpacing())
         modified = true;
     else if (m_ui.iconIncludedInAlignment->isChecked() != m_internalSettings->iconIncludedInAlignment())
+        modified = true;
+    else if (m_ui.dimAppName->isChecked() != m_internalSettings->dimAppName())
+        modified = true;
+    else if (m_ui.appNameOpacity->value() != m_internalSettings->appNameOpacity())
         modified = true;
     else if (m_ui.buttonSize->currentIndex() != m_internalSettings->buttonSize())
         modified = true;

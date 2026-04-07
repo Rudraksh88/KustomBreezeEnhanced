@@ -1098,12 +1098,84 @@ void Decoration::paintTitleBar(QPainter *painter, const QRectF &repaintRegion)
         // draw caption text
         // When icon is shown, we draw at calculated textX position
         // Otherwise, use Qt's alignment within the rect
+
+        // Check if we need to dim the app name
+        const bool dimAppName = m_internalSettings->dimAppName();
+        int separatorIndex = -1;
+
+        if (dimAppName) {
+            // Look for common separators: " - ", " — " (em dash), " – " (en dash), " | ", " : "
+            const QStringList separators = {QStringLiteral(" - "), QStringLiteral(" — "), QStringLiteral(" – "), QStringLiteral(" | "), QStringLiteral(" : ")};
+            for (const QString &sep : separators) {
+                int idx = caption.lastIndexOf(sep);
+                if (idx != -1) {
+                    separatorIndex = idx;
+                    break;
+                }
+            }
+        }
+
         if (showIcon) {
             // Draw text at specific X position, vertically centered
             const int textY = cR.first.top() + (cR.first.height() + painter->fontMetrics().ascent() - painter->fontMetrics().descent()) / 2;
-            painter->drawText(textX, textY, caption);
+
+            if (separatorIndex != -1) {
+                // Split the caption into document name and app name (including separator)
+                const QString documentPart = caption.left(separatorIndex);
+                const QString appPart = caption.mid(separatorIndex);
+
+                // Draw document part with full opacity
+                painter->drawText(textX, textY, documentPart);
+
+                // Calculate position for app part
+                const int documentWidth = painter->fontMetrics().horizontalAdvance(documentPart);
+
+                // Draw app part with reduced opacity
+                QColor dimmedColor = fontColor();
+                dimmedColor.setAlphaF(dimmedColor.alphaF() * m_internalSettings->appNameOpacity() / 100.0);
+                painter->setPen(dimmedColor);
+                painter->drawText(textX + documentWidth, textY, appPart);
+
+                // Restore original pen color
+                painter->setPen(fontColor());
+            } else {
+                painter->drawText(textX, textY, caption);
+            }
         } else {
-            painter->drawText(cR.first, cR.second | Qt::TextSingleLine, caption);
+            if (separatorIndex != -1) {
+                // Split the caption into document name and app name (including separator)
+                const QString documentPart = caption.left(separatorIndex);
+                const QString appPart = caption.mid(separatorIndex);
+
+                // Calculate text position based on alignment
+                const int textY = cR.first.top() + (cR.first.height() + painter->fontMetrics().ascent() - painter->fontMetrics().descent()) / 2;
+                int drawX;
+
+                if (cR.second & Qt::AlignHCenter) {
+                    drawX = cR.first.left() + (cR.first.width() - textWidth) / 2;
+                } else if (cR.second & Qt::AlignRight) {
+                    drawX = cR.first.right() - textWidth;
+                } else {
+                    drawX = cR.first.left();
+                }
+
+                // Draw document part with full opacity
+                painter->drawText(drawX, textY, documentPart);
+
+                // Calculate position for app part
+                const int documentWidth = painter->fontMetrics().horizontalAdvance(documentPart);
+
+                // Draw app part with reduced opacity
+                QColor dimmedColor = fontColor();
+                dimmedColor.setAlphaF(dimmedColor.alphaF() * m_internalSettings->appNameOpacity() / 100.0);
+                painter->setPen(dimmedColor);
+                painter->drawText(drawX + documentWidth, textY, appPart);
+
+                // Restore original pen color
+                painter->setPen(fontColor());
+            } else {
+                painter->drawText(cR.first, cR.second | Qt::TextSingleLine, caption);
+            }
         }
     }
 }

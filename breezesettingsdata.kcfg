@@ -112,6 +112,18 @@
       <max>20</max>
     </entry>
 
+    <!-- dim app name in title (e.g. "Document - App Name") -->
+    <entry name="DimAppName" type = "Bool">
+      <default>true</default>
+    </entry>
+
+    <!-- app name opacity (percentage, 100 = same as title, 0 = invisible) -->
+    <entry name="AppNameOpacity" type = "Int">
+      <default>50</default>
+      <min>0</min>
+      <max>100</max>
+    </entry>
+
     <!-- button size -->
     <entry name="ButtonSize" type="Enum">
       <choices>

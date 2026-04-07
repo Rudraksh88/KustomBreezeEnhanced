@@ -457,17 +457,56 @@
             <number>3</number>
            </property>
           </widget>
-         </item>
-         <item row="0" column="9">
-          <widget class="QCheckBox" name="iconIncludedInAlignment">
-           <property name="text">
-            <string>Center with title</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
+          </item>
+          <item row="0" column="9">
+           <widget class="QCheckBox" name="iconIncludedInAlignment">
+            <property name="text">
+             <string>Center with title</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="4">
+           <widget class="QCheckBox" name="dimAppName">
+            <property name="text">
+             <string>Dim app name</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="5">
+           <widget class="QLabel" name="appNameOpacityLabel">
+            <property name="text">
+             <string>Opacity:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="buddy">
+             <cstring>appNameOpacity</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="6">
+           <widget class="QSpinBox" name="appNameOpacity">
+            <property name="suffix">
+             <string> %</string>
+            </property>
+            <property name="minimum">
+             <number>0</number>
+            </property>
+            <property name="maximum">
+             <number>100</number>
+            </property>
+            <property name="value">
+             <number>50</number>
+            </property>
+           </widget>
+          </item>
        <item row="22" column="1" colspan="4">
         <widget class="QCheckBox" name="drawSizeGrip">
          <property name="text">
@@ -877,6 +916,8 @@
     <tabstop>titleBarIconSize</tabstop>
     <tabstop>titleBarIconSpacing</tabstop>
     <tabstop>iconIncludedInAlignment</tabstop>
+    <tabstop>dimAppName</tabstop>
+    <tabstop>appNameOpacity</tabstop>
     <tabstop>buttonSize</tabstop>
    <tabstop>buttonStyle</tabstop>
    <tabstop>buttonSpacing</tabstop>
@@ -1158,21 +1199,53 @@
       </hint>
      </hints>
     </connection>
-    <connection>
-     <sender>showTitleBarIcon</sender>
-     <signal>toggled(bool)</signal>
-     <receiver>iconIncludedInAlignment</receiver>
-     <slot>setEnabled(bool)</slot>
-     <hints>
-      <hint type="sourcelabel">
-       <x>20</x>
-       <y>20</y>
-      </hint>
-      <hint type="destinationlabel">
-       <x>20</x>
-       <y>20</y>
-      </hint>
-     </hints>
-    </connection>
-   </connections>
+     <connection>
+      <sender>showTitleBarIcon</sender>
+      <signal>toggled(bool)</signal>
+      <receiver>iconIncludedInAlignment</receiver>
+      <slot>setEnabled(bool)</slot>
+      <hints>
+       <hint type="sourcelabel">
+        <x>20</x>
+        <y>20</y>
+       </hint>
+       <hint type="destinationlabel">
+        <x>20</x>
+        <y>20</y>
+       </hint>
+      </hints>
+     </connection>
+     <connection>
+      <sender>dimAppName</sender>
+      <signal>toggled(bool)</signal>
+      <receiver>appNameOpacity</receiver>
+      <slot>setEnabled(bool)</slot>
+      <hints>
+       <hint type="sourcelabel">
+        <x>20</x>
+        <y>20</y>
+       </hint>
+       <hint type="destinationlabel">
+        <x>20</x>
+        <y>20</y>
+       </hint>
+      </hints>
+     </connection>
+     <connection>
+      <sender>dimAppName</sender>
+      <signal>toggled(bool)</signal>
+      <receiver>appNameOpacityLabel</receiver>
+      <slot>setEnabled(bool)</slot>
+      <hints>
+       <hint type="sourcelabel">
+        <x>20</x>
+        <y>20</y>
+       </hint>
+       <hint type="destinationlabel">
+        <x>20</x>
+        <y>20</y>
+       </hint>
+      </hints>
+     </connection>
+    </connections>
  </ui>
