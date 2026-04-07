@@ -1031,9 +1031,9 @@ void Decoration::paintTitleBar(QPainter *painter, const QRectF &repaintRegion)
         // Total width of icon + spacing (if icon is shown)
         const int iconTotalWidth = showIcon ? (iconSize + iconSpacing) : 0;
 
-        // Limit text to 60% of available width, also accounting for icon if shown
+        // Allow text to use up to 85% of available width (leaving ~15% gap to buttons)
         const int availableWidth = cR.first.width();
-        const int maxTextWidth = qMax(0, static_cast<int>(availableWidth * 0.6) - iconTotalWidth);
+        const int maxTextWidth = qMax(0, static_cast<int>(availableWidth * 0.85) - iconTotalWidth);
         const QString caption = painter->fontMetrics().elidedText(c->caption(), Qt::ElideMiddle, maxTextWidth);
 
         // Calculate the actual text position based on alignment
