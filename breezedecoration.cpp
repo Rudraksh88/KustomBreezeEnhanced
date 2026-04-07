@@ -1078,6 +1078,12 @@ void Decoration::paintTitleBar(QPainter *painter, const QRectF &repaintRegion)
             // Paint the window icon with proper palette and high quality rendering
             painter->save();
             painter->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+
+            // Dim icon for inactive windows (same as text dimming)
+            if (!c->isActive()) {
+                painter->setOpacity(0.5);
+            }
+
             const QPalette activePalette = KIconLoader::global()->customPalette();
             QPalette palette = c->palette();
             palette.setColor(QPalette::WindowText, fontColor());
