@@ -33,6 +33,7 @@
 #include <QPalette>
 #include <QVariant>
 #include <QVariantAnimation>
+#include <QVector>
 
 class QVariantAnimation;
 
@@ -153,6 +154,7 @@ private:
     void updateShadow();
     void updateActiveShadow();
     void updateInactiveShadow();
+    void rebuildShadowCache();
     void calculateWindowAndTitleBarShapes(const bool windowShapeOnly = false);
 
     //*@name border size
@@ -185,6 +187,20 @@ private:
 
     //* active state change opacity
     qreal m_opacity = 0;
+
+    //* cached shadow state used to avoid rebuilding blur on every animation tick
+    int m_shadowSizeEnum = InternalSettings::ShadowLarge;
+    int m_shadowStrength = 255;
+    QColor m_shadowColor = Qt::black;
+    bool m_specificShadowsInactiveWindows = false;
+    int m_shadowSizeEnumInactiveWindows = InternalSettings::ShadowLarge;
+    int m_shadowStrengthInactiveWindows = 255;
+    QColor m_shadowColorInactiveWindows = Qt::black;
+    bool m_shadowCacheValid = false;
+    int m_lastShadowAnimationFrame = -1;
+    std::shared_ptr<KDecoration3::DecorationShadow> m_activeShadow;
+    std::shared_ptr<KDecoration3::DecorationShadow> m_inactiveShadow;
+    QVector<std::shared_ptr<KDecoration3::DecorationShadow>> m_shadowTransitionCache;
 
     //* Rectangular area of titlebar without clipped corners
     QRect m_titleRect;
