@@ -187,6 +187,10 @@
       <default>false</default>
     </entry>
 
+    <entry name="TitleBarCustomColor" type = "Color">
+      <default>18, 18, 18</default>
+    </entry>
+
     <!-- match colors -->
     <entry name="SystemForegroundColor" type = "Bool">
       <default>false</default>

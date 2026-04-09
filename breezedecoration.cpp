@@ -377,24 +377,16 @@ QColor Decoration::rawTitleBarColor() const
             titleBarColor = KColorUtils::mix(c->color(ColorGroup::Inactive, ColorRole::TitleBar), c->color(ColorGroup::Active, ColorRole::TitleBar), m_opacity);
         } else
             titleBarColor = c->color(c->isActive() ? ColorGroup::Active : ColorGroup::Inactive, ColorRole::TitleBar);
+        titleBarColor.setAlpha(titleBarAlpha());
     } else {
-        // Set active color to the #181818 and inactive to #1A1A1A
-        // if( m_animation->state() == QAbstractAnimation::Running )
-        // {
-        //     titleBarColor = KColorUtils::mix(
-        //         QColor( 26, 26, 26 ),
-        //         QColor( 24, 24, 24 ),
-        //         m_opacity );
-        // } else titleBarColor = c->isActive() ? QColor( 26, 26, 26 ) : QColor( 24, 24, 24 );
-        // Titlebar color. Tags: #Zephyr #theme #color
-
-        // Before Dark update
-        // titleBarColor = c->isActive() ? QColor( 26, 26, 26 ) : QColor( 26, 26, 26 );
-
-        // After Dark update
-        titleBarColor = c->isActive() ? QColor(18, 18, 18) : QColor(18, 18, 18);
+        titleBarColor = m_internalSettings->titleBarCustomColor();
+        if (m_internalSettings->opaqueTitleBar()) {
+            titleBarColor.setAlpha(255);
+        } else {
+            const int alpha = qRound(static_cast<qreal>(titleBarColor.alpha()) * static_cast<qreal>(titleBarAlpha()) / 255.0);
+            titleBarColor.setAlpha(alpha);
+        }
     }
-    titleBarColor.setAlpha(titleBarAlpha());
     return titleBarColor;
 }
 

@@ -76,6 +76,7 @@ ConfigWidget::ConfigWidget(QObject *parent, const KPluginMetaData &data, const Q
     connect(m_ui.drawTitleBarSeparator, &QAbstractButton::clicked, this, &ConfigWidget::updateChanged);
     connect(m_ui.hideTitleBar, SIGNAL(currentIndexChanged(int)), SLOT(updateChanged()));
     connect(m_ui.matchColorForTitleBar, &QAbstractButton::clicked, this, &ConfigWidget::updateChanged);
+    connect(m_ui.titleBarCustomColor, &KColorButton::changed, this, &ConfigWidget::updateChanged);
     connect(m_ui.systemForegroundColor, &QAbstractButton::clicked, this, &ConfigWidget::updateChanged);
 
     // track animations changes
@@ -128,6 +129,7 @@ void ConfigWidget::load()
     m_ui.drawTitleBarSeparator->setChecked(m_internalSettings->drawTitleBarSeparator());
     m_ui.hideTitleBar->setCurrentIndex(m_internalSettings->hideTitleBar());
     m_ui.matchColorForTitleBar->setChecked(m_internalSettings->matchColorForTitleBar());
+    m_ui.titleBarCustomColor->setColor(m_internalSettings->titleBarCustomColor());
     m_ui.systemForegroundColor->setChecked(m_internalSettings->systemForegroundColor());
 
     // load shadows
@@ -187,6 +189,7 @@ void ConfigWidget::save()
     m_internalSettings->setDrawTitleBarSeparator(m_ui.drawTitleBarSeparator->isChecked());
     m_internalSettings->setHideTitleBar(m_ui.hideTitleBar->currentIndex());
     m_internalSettings->setMatchColorForTitleBar(m_ui.matchColorForTitleBar->isChecked());
+    m_internalSettings->setTitleBarCustomColor(m_ui.titleBarCustomColor->color());
     m_internalSettings->setSystemForegroundColor(m_ui.systemForegroundColor->isChecked());
 
     m_internalSettings->setShadowSize(m_ui.shadowSize->currentIndex());
@@ -251,6 +254,7 @@ void ConfigWidget::defaults()
     m_ui.drawTitleBarSeparator->setChecked(m_internalSettings->drawTitleBarSeparator());
     m_ui.hideTitleBar->setCurrentIndex(m_internalSettings->hideTitleBar());
     m_ui.matchColorForTitleBar->setChecked(m_internalSettings->matchColorForTitleBar());
+    m_ui.titleBarCustomColor->setColor(m_internalSettings->titleBarCustomColor());
     m_ui.systemForegroundColor->setChecked(m_internalSettings->systemForegroundColor());
 
     m_ui.animationsEnabled->setChecked(m_internalSettings->animationsEnabled());
@@ -325,6 +329,8 @@ void ConfigWidget::updateChanged()
     else if (m_ui.hideTitleBar->currentIndex() != m_internalSettings->hideTitleBar())
         modified = true;
     else if (m_ui.matchColorForTitleBar->isChecked() != m_internalSettings->matchColorForTitleBar())
+        modified = true;
+    else if (m_ui.titleBarCustomColor->color() != m_internalSettings->titleBarCustomColor())
         modified = true;
     else if (m_ui.systemForegroundColor->isChecked() != m_internalSettings->systemForegroundColor())
         modified = true;
