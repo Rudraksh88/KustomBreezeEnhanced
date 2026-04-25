@@ -58,6 +58,12 @@ namespace Breeze
 
             // propagate all features found in mask to the output configuration
             if( exception.mask() & BorderSize ) configuration->setBorderSize( exception.borderSize() );
+            if( exception.mask() & ButtonSize ) configuration->setButtonSize( exception.buttonSize() );
+            if( exception.mask() & ButtonSpacing ) configuration->setButtonSpacing( exception.buttonSpacing() );
+            if( exception.mask() & ButtonPadding ) configuration->setButtonPadding( exception.buttonPadding() );
+            if( exception.mask() & HOffset ) configuration->setHOffset( exception.hOffset() );
+            if( exception.mask() & TitleBarIconSize ) configuration->setTitleBarIconSize( exception.titleBarIconSize() );
+            if( exception.mask() & TitleBarIconSpacing ) configuration->setTitleBarIconSpacing( exception.titleBarIconSpacing() );
             configuration->setHideTitleBar( exception.hideTitleBar() );
             configuration->setDrawTitleBarSeparator( exception.drawTitleBarSeparator() );
             configuration->setOpaqueTitleBar( exception.opaqueTitleBar() );
@@ -104,7 +110,7 @@ namespace Breeze
     {
 
         // list of items to be written
-        QStringList keys = { "Enabled", "ExceptionPattern", "ExceptionType", "HideTitleBar", "DrawTitleBarSeparator", "IsDialog", "OpaqueTitleBar", "OpacityOverride", "Mask", "BorderSize", "MatchColorForTitleBar", "DrawBackgroundGradient", "GradientOverride"};
+        QStringList keys = { "Enabled", "ExceptionPattern", "ExceptionType", "HideTitleBar", "DrawTitleBarSeparator", "IsDialog", "OpaqueTitleBar", "OpacityOverride", "Mask", "BorderSize", "MatchColorForTitleBar", "DrawBackgroundGradient", "GradientOverride", "ButtonSize", "ButtonSpacing", "ButtonPadding", "hOffset", "TitleBarIconSize", "TitleBarIconSpacing"};
 
         // write all items
         foreach( auto key, keys )

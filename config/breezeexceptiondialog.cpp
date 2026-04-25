@@ -41,6 +41,12 @@ namespace Breeze
 
         // store checkboxes from ui into list
         m_checkboxes.insert( BorderSize, m_ui.borderSizeCheckBox );
+        m_checkboxes.insert( ButtonSize, m_ui.buttonSizeCheckBox );
+        m_checkboxes.insert( ButtonSpacing, m_ui.buttonSpacingCheckBox );
+        m_checkboxes.insert( ButtonPadding, m_ui.buttonPaddingCheckBox );
+        m_checkboxes.insert( HOffset, m_ui.hOffsetCheckBox );
+        m_checkboxes.insert( TitleBarIconSize, m_ui.titleBarIconSizeCheckBox );
+        m_checkboxes.insert( TitleBarIconSpacing, m_ui.titleBarIconSpacingCheckBox );
 
         // detect window properties
         connect( m_ui.detectDialogButton, &QAbstractButton::clicked, this, &ExceptionDialog::selectWindowProperties );
@@ -49,6 +55,12 @@ namespace Breeze
         connect( m_ui.exceptionType, SIGNAL(currentIndexChanged(int)), SLOT(updateChanged()) );
         connect( m_ui.exceptionEditor, &QLineEdit::textChanged, this, &ExceptionDialog::updateChanged );
         connect( m_ui.borderSizeComboBox, SIGNAL(currentIndexChanged(int)), SLOT(updateChanged()) );
+        connect( m_ui.buttonSizeComboBox, SIGNAL(currentIndexChanged(int)), SLOT(updateChanged()) );
+        connect( m_ui.buttonSpacingSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this](int){updateChanged();} );
+        connect( m_ui.buttonPaddingSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this](int){updateChanged();} );
+        connect( m_ui.hOffsetSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this](int){updateChanged();} );
+        connect( m_ui.titleBarIconSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this](int){updateChanged();} );
+        connect( m_ui.titleBarIconSpacingSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this](int){updateChanged();} );
 
         for( CheckBoxMap::iterator iter = m_checkboxes.begin(); iter != m_checkboxes.end(); ++iter )
         { connect( iter.value(), &QAbstractButton::clicked, this, &ExceptionDialog::updateChanged ); }
@@ -77,6 +89,12 @@ namespace Breeze
         m_ui.exceptionType->setCurrentIndex(m_exception->exceptionType() );
         m_ui.exceptionEditor->setText( m_exception->exceptionPattern() );
         m_ui.borderSizeComboBox->setCurrentIndex( m_exception->borderSize() );
+        m_ui.buttonSizeComboBox->setCurrentIndex( m_exception->buttonSize() );
+        m_ui.buttonSpacingSpinBox->setValue( m_exception->buttonSpacing() );
+        m_ui.buttonPaddingSpinBox->setValue( m_exception->buttonPadding() );
+        m_ui.hOffsetSpinBox->setValue( m_exception->hOffset() );
+        m_ui.titleBarIconSizeSpinBox->setValue( m_exception->titleBarIconSize() );
+        m_ui.titleBarIconSpacingSpinBox->setValue( m_exception->titleBarIconSpacing() );
         m_ui.hideTitleBar->setCurrentIndex( m_exception->hideTitleBar() );
         m_ui.matchColorForTitleBar->setChecked( m_exception->matchColorForTitleBar() );
         m_ui.systemForegroundColor->setChecked( m_exception->systemForegroundColor() );
@@ -101,6 +119,12 @@ namespace Breeze
         m_exception->setExceptionType( m_ui.exceptionType->currentIndex() );
         m_exception->setExceptionPattern( m_ui.exceptionEditor->text() );
         m_exception->setBorderSize( m_ui.borderSizeComboBox->currentIndex() );
+        m_exception->setButtonSize( m_ui.buttonSizeComboBox->currentIndex() );
+        m_exception->setButtonSpacing( m_ui.buttonSpacingSpinBox->value() );
+        m_exception->setButtonPadding( m_ui.buttonPaddingSpinBox->value() );
+        m_exception->setHOffset( m_ui.hOffsetSpinBox->value() );
+        m_exception->setTitleBarIconSize( m_ui.titleBarIconSizeSpinBox->value() );
+        m_exception->setTitleBarIconSpacing( m_ui.titleBarIconSpacingSpinBox->value() );
         m_exception->setHideTitleBar( m_ui.hideTitleBar->currentIndex() );
         m_exception->setMatchColorForTitleBar( m_ui.matchColorForTitleBar->isChecked() );
         m_exception->setSystemForegroundColor( m_ui.systemForegroundColor->isChecked() );
@@ -129,6 +153,12 @@ namespace Breeze
         if( m_exception->exceptionType() != m_ui.exceptionType->currentIndex() ) modified = true;
         else if( m_exception->exceptionPattern() != m_ui.exceptionEditor->text() ) modified = true;
         else if( m_exception->borderSize() != m_ui.borderSizeComboBox->currentIndex() ) modified = true;
+        else if( m_exception->buttonSize() != m_ui.buttonSizeComboBox->currentIndex() ) modified = true;
+        else if( m_exception->buttonSpacing() != m_ui.buttonSpacingSpinBox->value() ) modified = true;
+        else if( m_exception->buttonPadding() != m_ui.buttonPaddingSpinBox->value() ) modified = true;
+        else if( m_exception->hOffset() != m_ui.hOffsetSpinBox->value() ) modified = true;
+        else if( m_exception->titleBarIconSize() != m_ui.titleBarIconSizeSpinBox->value() ) modified = true;
+        else if( m_exception->titleBarIconSpacing() != m_ui.titleBarIconSpacingSpinBox->value() ) modified = true;
         else if( m_exception->hideTitleBar() != m_ui.hideTitleBar->currentIndex() ) modified = true;
         else if( m_exception->matchColorForTitleBar() != m_ui.matchColorForTitleBar->isChecked() ) modified = true;
         else if( m_exception->systemForegroundColor() != m_ui.systemForegroundColor->isChecked() ) modified = true;

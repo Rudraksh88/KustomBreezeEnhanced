@@ -337,6 +337,169 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="title">
+      <string>Button &amp;&amp; Title Bar Geometry</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="buttonSizeCheckBox">
+        <property name="text">
+         <string>Button size:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="buttonSizeComboBox">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <item>
+         <property name="text">
+          <string comment="@item:inlistbox Button size:">Tiny</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string comment="@item:inlistbox Button size:">Small</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string comment="@item:inlistbox Button size:">Default</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string comment="@item:inlistbox Button size:">Large</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string comment="@item:inlistbox Button size:">Very Large</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="buttonSpacingCheckBox">
+        <property name="text">
+         <string>Button spacing:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSpinBox" name="buttonSpacingSpinBox">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="suffix">
+         <string> px</string>
+        </property>
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>40</number>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QCheckBox" name="buttonPaddingCheckBox">
+        <property name="text">
+         <string>Button padding (titlebar height):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QSpinBox" name="buttonPaddingSpinBox">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="suffix">
+         <string> px</string>
+        </property>
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>40</number>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QCheckBox" name="hOffsetCheckBox">
+        <property name="text">
+         <string>Horizontal offset:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QSpinBox" name="hOffsetSpinBox">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="suffix">
+         <string> px</string>
+        </property>
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>40</number>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QCheckBox" name="titleBarIconSizeCheckBox">
+        <property name="text">
+         <string>Title bar icon size:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QSpinBox" name="titleBarIconSizeSpinBox">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="suffix">
+         <string>%</string>
+        </property>
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QCheckBox" name="titleBarIconSpacingCheckBox">
+        <property name="text">
+         <string>Title bar icon spacing:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QSpinBox" name="titleBarIconSpacingSpinBox">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="suffix">
+         <string> px</string>
+        </property>
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>20</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -460,6 +623,66 @@
      <x>166</x>
      <y>229</y>
     </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonSizeCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>buttonSizeComboBox</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel"><x>0</x><y>0</y></hint>
+    <hint type="destinationlabel"><x>0</x><y>0</y></hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonSpacingCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>buttonSpacingSpinBox</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel"><x>0</x><y>0</y></hint>
+    <hint type="destinationlabel"><x>0</x><y>0</y></hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonPaddingCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>buttonPaddingSpinBox</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel"><x>0</x><y>0</y></hint>
+    <hint type="destinationlabel"><x>0</x><y>0</y></hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>hOffsetCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>hOffsetSpinBox</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel"><x>0</x><y>0</y></hint>
+    <hint type="destinationlabel"><x>0</x><y>0</y></hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>titleBarIconSizeCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>titleBarIconSizeSpinBox</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel"><x>0</x><y>0</y></hint>
+    <hint type="destinationlabel"><x>0</x><y>0</y></hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>titleBarIconSpacingCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>titleBarIconSpacingSpinBox</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel"><x>0</x><y>0</y></hint>
+    <hint type="destinationlabel"><x>0</x><y>0</y></hint>
    </hints>
   </connection>
  </connections>

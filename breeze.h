@@ -67,7 +67,13 @@ namespace Breeze
     enum ExceptionMask
     {
         None = 0,
-        BorderSize = 1<<4
+        BorderSize = 1<<4,
+        ButtonSize = 1<<5,
+        ButtonSpacing = 1<<6,
+        ButtonPadding = 1<<7,
+        HOffset = 1<<8,
+        TitleBarIconSize = 1<<9,
+        TitleBarIconSpacing = 1<<10
     };
 }
 
