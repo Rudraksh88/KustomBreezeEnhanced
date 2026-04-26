@@ -909,7 +909,7 @@ void Decoration::updateButtonsGeometry()
                 b->setOffset(QPointF(0, 5.3)); // +6 shifts vertically
             }
         } else {
-            m_rightButtons->setPos(QPointF(size().width() - m_rightButtons->geometry().width() - hMargin - borderRight(), 0 + vPadding + 2.2));
+            m_rightButtons->setPos(QPointF(size().width() - m_rightButtons->geometry().width() - hMargin - borderRight(), verticalOffset + vPadding));
             for (const QPointer<KDecoration3::DecorationButton> &button : m_rightButtons->buttons()) {
                 auto b = static_cast<Button *>(button.data());
                 b->setOffset(QPointF(0, 0));
