@@ -37,7 +37,22 @@ namespace Breeze
 
     namespace
     {
+        constexpr qreal MutedButtonOpacity = 0.3;
+        constexpr qreal MutedDisabledInactiveButtonOpacity = 0.1;
         constexpr qreal ModifiedDotRadiusRatio = 0.4;
+
+        QImage whiteTint(QImage image, qreal opacity)
+        {
+            image = image.convertToFormat(QImage::Format_ARGB32);
+            for (int y = 0; y < image.height(); ++y) {
+                auto *pixels = reinterpret_cast<QRgb *>(image.scanLine(y));
+                for (int x = 0; x < image.width(); ++x) {
+                    const QRgb pixel = pixels[x];
+                    pixels[x] = qRgba(255, 255, 255, qRound(qAlpha(pixel) * opacity));
+                }
+            }
+            return image;
+        }
 
         void setupMacButtonPainter(QPainter *painter, const QPointF &topLeft, qreal iconWidth, bool animationsEnabled)
         {
@@ -125,28 +140,28 @@ namespace Breeze
             {
 
                 case DecorationButtonType::Close:
-                b->setVisible( d->window()->isCloseable() );
-                QObject::connect(d->window(), &KDecoration3::DecoratedWindow::closeableChanged, b, &Breeze::Button::setVisible );
+                b->setEnabled( d->window()->isCloseable() );
+                QObject::connect(d->window(), &KDecoration3::DecoratedWindow::closeableChanged, b, &Breeze::Button::setEnabled );
                 break;
 
                 case DecorationButtonType::Maximize:
-                b->setVisible( d->window()->isMaximizeable() );
-                QObject::connect(d->window(), &KDecoration3::DecoratedWindow::maximizeableChanged, b, &Breeze::Button::setVisible );
+                b->setEnabled( d->window()->isMaximizeable() );
+                QObject::connect(d->window(), &KDecoration3::DecoratedWindow::maximizeableChanged, b, &Breeze::Button::setEnabled );
                 break;
 
                 case DecorationButtonType::Minimize:
-                b->setVisible( d->window()->isMinimizeable() );
-                QObject::connect(d->window(), &KDecoration3::DecoratedWindow::minimizeableChanged, b, &Breeze::Button::setVisible );
+                b->setEnabled( d->window()->isMinimizeable() );
+                QObject::connect(d->window(), &KDecoration3::DecoratedWindow::minimizeableChanged, b, &Breeze::Button::setEnabled );
                 break;
 
                 case DecorationButtonType::ContextHelp:
-                b->setVisible( d->window()->providesContextHelp() );
-                QObject::connect(d->window(), &KDecoration3::DecoratedWindow::providesContextHelpChanged, b, &Breeze::Button::setVisible );
+                b->setEnabled( d->window()->providesContextHelp() );
+                QObject::connect(d->window(), &KDecoration3::DecoratedWindow::providesContextHelpChanged, b, &Breeze::Button::setEnabled );
                 break;
 
                 case DecorationButtonType::Shade:
-                b->setVisible( d->window()->isShadeable() );
-                QObject::connect(d->window(), &KDecoration3::DecoratedWindow::shadeableChanged, b, &Breeze::Button::setVisible );
+                b->setEnabled( d->window()->isShadeable() );
+                QObject::connect(d->window(), &KDecoration3::DecoratedWindow::shadeableChanged, b, &Breeze::Button::setEnabled );
                 break;
 
                 case DecorationButtonType::Menu:
@@ -155,6 +170,8 @@ namespace Breeze
 
                 default: break;
             }
+
+            QObject::connect(b, &KDecoration3::DecorationButton::enabledChanged, b, [b]() { b->update(); });
 
             return b;
         }
@@ -171,6 +188,40 @@ namespace Breeze
         if (!decoration()) return;
 
         painter->save();
+
+        const auto d = qobject_cast<Decoration *>(decoration());
+        const bool inactiveWindow = d && !d->window()->isActive();
+        const bool muted = inactiveWindow || !isEnabled();
+
+        if (!muted) {
+            paintButton(painter);
+        } else {
+            const qreal opacity = inactiveWindow && !isEnabled()
+                ? MutedDisabledInactiveButtonOpacity
+                : MutedButtonOpacity;
+            const QRectF buttonRect = geometry();
+            const qreal devicePixelRatio = qMax<qreal>(1.0, painter->device()->devicePixelRatioF());
+            const QSize imageSize(qMax(1, qCeil(buttonRect.width() * devicePixelRatio)),
+                                  qMax(1, qCeil(buttonRect.height() * devicePixelRatio)));
+
+            QImage image(imageSize, QImage::Format_ARGB32_Premultiplied);
+            image.setDevicePixelRatio(devicePixelRatio);
+            image.fill(Qt::transparent);
+
+            QPainter imagePainter(&image);
+            imagePainter.translate(-buttonRect.topLeft());
+            paintButton(&imagePainter);
+            imagePainter.end();
+
+            painter->drawImage(buttonRect.topLeft(), whiteTint(image, opacity));
+        }
+
+        painter->restore();
+    }
+
+    //__________________________________________________________________
+    void Button::paintButton(QPainter *painter)
+    {
 
         // Keep the glyph independent from any extra hit area added for Fitts' law.
         // The offset always remains inside geometry(), so button-local repaints also
@@ -232,9 +283,6 @@ namespace Breeze
 
 
         }
-
-        painter->restore();
-
     }
 
     //__________________________________________________________________
@@ -879,7 +927,7 @@ namespace Breeze
                 if ( this->hovered() || isChecked() )
                 {
                   painter->setPen( Qt::NoPen );
-                  painter->setBrush(QBrush(symbolColor));
+                  painter->setBrush(QBrush(trafficLightGlyphColor));
                   painter->drawEllipse( QRectF( 6, 6, 6, 6 ) );
                 }
                 break;
@@ -910,25 +958,25 @@ namespace Breeze
 
                 if ( isChecked() )
                 {
-                    painter->setPen( symbol_pen );
+                    painter->setPen( trafficLightGlyphPen );
                     painter->drawLine( QPointF( 6, 12 ), QPointF( 12, 12 ) );
                     painter->setPen( Qt::NoPen );
                     QPainterPath path;
                     path.moveTo(9, 11);
                     path.lineTo(5, 6);
                     path.lineTo(13, 6);
-                    painter->fillPath(path, QBrush(symbolColor));
+                    painter->fillPath(path, QBrush(trafficLightGlyphColor));
 
                 }
                 else if ( this->hovered() ) {
-                    painter->setPen( symbol_pen );
+                    painter->setPen( trafficLightGlyphPen );
                     painter->drawLine( QPointF( 6, 6 ), QPointF( 12, 6 ) );
                     painter->setPen( Qt::NoPen );
                     QPainterPath path;
                     path.moveTo(9, 7);
                     path.lineTo(5, 12);
                     path.lineTo(13, 12);
-                    painter->fillPath(path, QBrush(symbolColor));
+                    painter->fillPath(path, QBrush(trafficLightGlyphColor));
                 }
                 break;
 
@@ -965,7 +1013,7 @@ namespace Breeze
                   path.moveTo(9, 12);
                   path.lineTo(5, 6);
                   path.lineTo(13, 6);
-                  painter->fillPath(path, QBrush(symbolColor));
+                  painter->fillPath(path, QBrush(trafficLightGlyphColor));
                 }
                 break;
 
@@ -1017,7 +1065,7 @@ namespace Breeze
                   path.moveTo(9, 6);
                   path.lineTo(5, 12);
                   path.lineTo(13, 12);
-                  painter->fillPath(path, QBrush(symbolColor));
+                  painter->fillPath(path, QBrush(trafficLightGlyphColor));
                 }
                 break;
             }
@@ -1080,7 +1128,7 @@ namespace Breeze
 
                 if ( this->hovered() || isChecked() )
                 {
-                  painter->setPen( symbol_pen );
+                  painter->setPen( trafficLightGlyphPen );
                   QPainterPath path;
                   path.moveTo( 6, 6 );
                   path.arcTo( QRectF( 5.5, 4, 7.5, 4.5 ), 180, -180 );
@@ -4587,7 +4635,7 @@ namespace Breeze
     bool Button::hovered() const
     {
       auto d = qobject_cast<Decoration*>( decoration() );
-      return isHovered() || ( d->buttonHovered() && d->internalSettings()->unisonHovering() );
+      return isEnabled() && ( isHovered() || ( d->buttonHovered() && d->internalSettings()->unisonHovering() ) );
     }
 
     //__________________________________________________________________

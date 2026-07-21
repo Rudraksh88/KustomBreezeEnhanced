@@ -102,6 +102,7 @@ namespace Breeze
         explicit Button(KDecoration3::DecorationButtonType type, Decoration *decoration, QObject *parent = nullptr);
 
         //* draw button icon
+        void paintButton( QPainter * );
         void drawIconPlasma( QPainter *) const;
         void drawIconGnome( QPainter *) const;
         void drawIconMacSierra( QPainter *) const;
