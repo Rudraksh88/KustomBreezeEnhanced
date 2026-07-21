@@ -139,9 +139,10 @@ namespace Breeze
 
         painter->save();
 
-        // translate from offset
-        if( m_flag == FlagFirstInList ) painter->translate( m_offset );
-        else painter->translate( 0, m_offset.y() );
+        // Keep the glyph independent from any extra hit area added for Fitts' law.
+        // The offset always remains inside geometry(), so button-local repaints also
+        // cover every pixel drawn by the button.
+        painter->translate(m_iconOffset);
 
         if( !m_iconSize.isValid() || isStandAlone() ) m_iconSize = geometry().size().toSize();
 

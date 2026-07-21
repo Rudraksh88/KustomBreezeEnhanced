@@ -56,9 +56,7 @@ namespace Breeze
         enum Flag
         {
             FlagNone,
-            FlagStandalone,
-            FlagFirstInList,
-            FlagLastInList
+            FlagStandalone
         };
 
         //* flag
@@ -68,17 +66,9 @@ namespace Breeze
         //* standalone buttons
         bool isStandAlone() const { return m_flag == FlagStandalone; }
 
-        //* offset
-        void setOffset( const QPointF& value )
-        { m_offset = value; }
-
-        //* horizontal offset, for rendering
-        void setHorizontalOffset( qreal value )
-        { m_offset.setX( value ); }
-
-        //* vertical offset, for rendering
-        void setVerticalOffset( qreal value )
-        { m_offset.setY( value ); }
+        //* icon offset inside the button's hit target
+        void setIconOffset(const QPointF &value)
+        { m_iconOffset = value; }
 
         //* set icon size
         void setIconSize( const QSize& value )
@@ -149,8 +139,8 @@ namespace Breeze
         //* active state change animation
         QVariantAnimation *m_animation;
 
-        //* vertical offset (for rendering)
-        QPointF m_offset;
+        //* rendering offset inside an extended edge/corner hit target
+        QPointF m_iconOffset;
 
         //* icon size
         QSizeF m_iconSize;

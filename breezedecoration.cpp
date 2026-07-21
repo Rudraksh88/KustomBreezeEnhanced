@@ -42,6 +42,7 @@
 #include <KPluginFactory>
 #include <KSharedConfig>
 
+#include <QGuiApplication>
 #include <QPainter>
 #include <QTextStream>
 #include <QTimer>
@@ -835,85 +836,68 @@ void Decoration::updateButtonsGeometry()
 {
     const auto s = settings();
 
-    // adjust button position
-    const int bWidth = buttonHeight();
-    const int bHeight = bWidth + (isTopEdge() ? s->smallSpacing() * Metrics::TitleBar_TopMargin : 0);
-    const int verticalOffset = (isTopEdge() ? s->smallSpacing() * Metrics::TitleBar_TopMargin : 0) + (captionHeight() - buttonHeight()) / 2;
-    foreach (const QPointer<KDecoration3::DecorationButton> &button, m_leftButtons->buttons() + m_rightButtons->buttons()) {
-        button->setGeometry(QRectF(QPoint(0, 0), QSizeF(bWidth, bHeight)));
-        static_cast<Button *>(button.data())->setIconSize(QSize(bWidth, bWidth));
-    }
+    const int iconSize = buttonHeight();
+    const int topPadding = s->smallSpacing() * Metrics::TitleBar_TopMargin;
+    const int iconTop = qMax(0, topPadding + (captionHeight() - iconSize) / 2);
+    const qreal iconOffsetY = isTopEdge() ? iconTop : 0;
+    const qreal hitHeight = iconOffsetY + iconSize;
+    const qreal groupTop = isTopEdge() ? 0 : iconTop;
+    const qreal spacing = 0.5 * s->smallSpacing() * m_internalSettings->buttonSpacing();
+    const qreal horizontalMargin = 0.5 * s->smallSpacing()
+        * (m_internalSettings->buttonPadding() + m_internalSettings->hOffset());
 
-    // padding
-    const double vPadding = isTopEdge() ? 0 : s->smallSpacing() * Metrics::TitleBar_TopMargin;
-    const double hPadding = s->smallSpacing() * Metrics::TitleBar_SideMargin;
-    const double hMargin = 0.5 * s->smallSpacing() * m_internalSettings->buttonPadding() + 0.5 * s->smallSpacing() * m_internalSettings->hOffset();
+    m_leftButtons->setSpacing(spacing);
+    m_rightButtons->setSpacing(spacing);
 
-    // left buttons
-    if (!m_leftButtons->buttons().isEmpty()) {
-        // spacing (use our own spacing instead of s->smallSpacing()*Metrics::TitleBar_ButtonSpacing)
-        m_leftButtons->setSpacing(0.5 * s->smallSpacing() * m_internalSettings->buttonSpacing());
+    // Always reset the complete visual state first. In particular, this removes
+    // edge offsets when a window is restored or its button layout is changed.
+    const auto resetButtons = [iconSize, hitHeight, iconOffsetY](KDecoration3::DecorationButtonGroup *group) {
+        for (KDecoration3::DecorationButton *decorationButton : group->buttons()) {
+            auto *button = static_cast<Button *>(decorationButton);
+            decorationButton->setGeometry(QRectF(QPointF(), QSizeF(iconSize, hitHeight)));
+            button->setFlag(Button::FlagNone);
+            button->setIconSize(QSize(iconSize, iconSize));
+            button->setIconOffset(QPointF(0, iconOffsetY));
+        }
+    };
+    resetButtons(m_leftButtons);
+    resetButtons(m_rightButtons);
 
+    // KDecoration lays a group out in the application's layout direction. Pick
+    // the physically outermost visible button, including in right-to-left UI.
+    const bool rightToLeft = QGuiApplication::layoutDirection() == Qt::RightToLeft;
+    const auto outerButton = [rightToLeft](KDecoration3::DecorationButtonGroup *group, bool leftSide) -> Button * {
+        const auto buttons = group->buttons();
+        const bool fromFront = leftSide != rightToLeft;
+        for (qsizetype i = 0; i < buttons.size(); ++i) {
+            KDecoration3::DecorationButton *button = buttons.at(fromFront ? i : buttons.size() - 1 - i);
+            if (button->isVisible()) {
+                return static_cast<Button *>(button);
+            }
+        }
+        return nullptr;
+    };
+
+    if (Button *button = outerButton(m_leftButtons, true)) {
         if (isLeftEdge()) {
-            // add offsets on the side buttons, to preserve padding, but satisfy Fitts law
-            auto button = static_cast<Button *>(m_leftButtons->buttons().front());
-            button->setGeometry(QRectF(QPoint(0, 0), QSizeF(bWidth + hPadding, bHeight)));
-            button->setFlag(Button::FlagFirstInList);
-
-            m_leftButtons->setPos(QPointF(hMargin, verticalOffset));
-
-            button->setOffset(QPointF(0, verticalOffset - 20));
-
-        } else
-            m_leftButtons->setPos(QPointF(hMargin - 1, verticalOffset + vPadding));
-
-        // Increast the icon size for the first button
-        static_cast<Button *>(m_leftButtons->buttons().front())->setIconSize(QSize(bWidth + hPadding - 1, bWidth + hPadding - 1));
-
-        // Move the first button up a bit
-        auto fbutton = static_cast<Button *>(m_leftButtons->buttons().front());
-        fbutton->setOffset(QPointF(0, verticalOffset - 4));
-
-        if (isTopEdge()) {
-            fbutton->setOffset(QPointF(-2, verticalOffset - 8));
+            // Place the group at x=0 and use the usual visual inset as extra
+            // hit area. The glyph itself remains aligned with restored windows.
+            const qreal edgeInset = qMax<qreal>(0, horizontalMargin);
+            button->setGeometry(QRectF(QPointF(), QSizeF(iconSize + edgeInset, hitHeight)));
+            button->setIconOffset(QPointF(edgeInset, iconOffsetY));
+            m_leftButtons->setPos(QPointF(0, groupTop));
+        } else {
+            m_leftButtons->setPos(QPointF(horizontalMargin + borderLeft(), groupTop));
         }
     }
 
-    // right buttons
-    if (!m_rightButtons->buttons().isEmpty()) {
-        // spacing (use our own spacing instead of s->smallSpacing()*Metrics::TitleBar_ButtonSpacing)
-        m_rightButtons->setSpacing(0.5 * s->smallSpacing() * m_internalSettings->buttonSpacing());
-
-        if (isRightEdge() || isTopEdge()) {
-            auto button = static_cast<Button *>(m_rightButtons->buttons().back());
-            button->setGeometry(QRectF(QPoint(0, 0), QSizeF(bWidth + hPadding + 10, bHeight))); // +10 shifts the button to the right
-            button->setFlag(Button::FlagLastInList);
-
-            m_rightButtons->setPos(QPointF(size().width() - m_rightButtons->geometry().width() + 5, 0));
-
-            // if (isTopEdge()) {
-            //     // Move all buttons down usng the offset
-            //     for (auto b : m_rightButtons->buttons().data()) {
-            //         static_cast<Button*>(b.data())->setOffset(QPointF(0, 0 + 5));
-            //     }
-            // }
-
-            // for (const QPointer<KDecoration2::DecorationButton>& button : m_rightButtons->buttons())
-            //     {
-            //         auto b = static_cast<Button*>(button.data());
-            //         b->setOffset(QPointF(0, 6));
-            //     }
-
-            for (const QPointer<KDecoration3::DecorationButton> &button : m_rightButtons->buttons()) {
-                auto b = static_cast<Button *>(button.data());
-                b->setOffset(QPointF(0, 5.3)); // +6 shifts vertically
-            }
+    if (Button *button = outerButton(m_rightButtons, false)) {
+        if (isRightEdge()) {
+            const qreal edgeInset = qMax<qreal>(0, horizontalMargin);
+            button->setGeometry(QRectF(QPointF(), QSizeF(iconSize + edgeInset, hitHeight)));
+            m_rightButtons->setPos(QPointF(size().width() - m_rightButtons->geometry().width(), groupTop));
         } else {
-            m_rightButtons->setPos(QPointF(size().width() - m_rightButtons->geometry().width() - hMargin - borderRight(), verticalOffset + vPadding));
-            for (const QPointer<KDecoration3::DecorationButton> &button : m_rightButtons->buttons()) {
-                auto b = static_cast<Button *>(button.data());
-                b->setOffset(QPointF(0, 0));
-            }
+            m_rightButtons->setPos(QPointF(size().width() - m_rightButtons->geometry().width() - horizontalMargin - borderRight(), groupTop));
         }
     }
 
