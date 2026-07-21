@@ -717,7 +717,7 @@ namespace Breeze
           symbol_pen.setWidthF( 9./7.*1.7*qMax((qreal)1.0, 20/width ) );
 
         QColor trafficLightGlyphColor(Qt::black);
-        trafficLightGlyphColor.setAlphaF(0.5);
+        trafficLightGlyphColor.setAlphaF(0.6);
         QPen trafficLightGlyphPen(symbol_pen);
         trafficLightGlyphPen.setColor(trafficLightGlyphColor);
 
