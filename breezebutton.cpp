@@ -37,18 +37,57 @@ namespace Breeze
 
     namespace
     {
-        constexpr qreal MutedButtonOpacity = 0.3;
+        constexpr qreal MutedButtonOpacity = 0.2;
         constexpr qreal MutedDisabledInactiveButtonOpacity = 0.1;
+        constexpr qreal MutedHoveredGlyphOpacity = 0.6;
         constexpr qreal ModifiedDotRadiusRatio = 0.4;
 
-        QImage whiteTint(QImage image, qreal opacity)
+        QImage whiteTint(QImage image, qreal opacity, bool highlightDetails)
         {
             image = image.convertToFormat(QImage::Format_ARGB32);
+
+            quint64 luminanceWeights[256] = {};
+            for (int y = 0; y < image.height(); ++y) {
+                const auto *pixels = reinterpret_cast<const QRgb *>(image.constScanLine(y));
+                for (int x = 0; x < image.width(); ++x) {
+                    const int alpha = qAlpha(pixels[x]);
+                    if (alpha > 0)
+                        luminanceWeights[qGray(pixels[x])] += alpha;
+                }
+            }
+
+            int referenceLuminance = 255;
+            quint64 greatestWeight = 0;
+            for (int luminance = 0; luminance < 256; ++luminance) {
+                if (luminanceWeights[luminance] > greatestWeight) {
+                    greatestWeight = luminanceWeights[luminance];
+                    referenceLuminance = luminance;
+                }
+            }
+
             for (int y = 0; y < image.height(); ++y) {
                 auto *pixels = reinterpret_cast<QRgb *>(image.scanLine(y));
                 for (int x = 0; x < image.width(); ++x) {
                     const QRgb pixel = pixels[x];
-                    pixels[x] = qRgba(255, 255, 255, qRound(qAlpha(pixel) * opacity));
+                    const int luminance = qGray(pixel);
+                    qreal contrast = 0.0;
+                    if (luminance < referenceLuminance && referenceLuminance > 0) {
+                        contrast = qreal(referenceLuminance - luminance) / referenceLuminance;
+                    } else if (luminance > referenceLuminance && referenceLuminance < 255) {
+                        contrast = qreal(luminance - referenceLuminance) / (255 - referenceLuminance);
+                    }
+
+                    qreal pixelOpacity = opacity;
+                    int tint = qRound(255 * (1.0 - contrast));
+                    if (highlightDetails) {
+                        // Traffic-light glyphs are 60% black, so their normalized
+                        // contrast is also about 60%. Map that to a 60%-white
+                        // hover highlight while leaving the circle at its base opacity.
+                        const qreal detailStrength = qMin<qreal>(1.0, contrast / 0.6);
+                        pixelOpacity += detailStrength * (MutedHoveredGlyphOpacity - opacity);
+                        tint = 255;
+                    }
+                    pixels[x] = qRgba(tint, tint, tint, qRound(qAlpha(pixel) * pixelOpacity));
                 }
             }
             return image;
@@ -192,6 +231,10 @@ namespace Breeze
         const auto d = qobject_cast<Decoration *>(decoration());
         const bool inactiveWindow = d && !d->window()->isActive();
         const bool muted = inactiveWindow || !isEnabled();
+        const bool fadingHoverGlyph = d && d->internalSettings()->animationsEnabled()
+            && m_animation->currentValue().toReal() > 0.0;
+        const bool highlightMutedGlyph = inactiveWindow && isEnabled()
+            && (this->hovered() || fadingHoverGlyph);
 
         if (!muted) {
             paintButton(painter);
@@ -213,7 +256,7 @@ namespace Breeze
             paintButton(&imagePainter);
             imagePainter.end();
 
-            painter->drawImage(buttonRect.topLeft(), whiteTint(image, opacity));
+            painter->drawImage(buttonRect.topLeft(), whiteTint(image, opacity, highlightMutedGlyph));
         }
 
         painter->restore();
@@ -732,7 +775,8 @@ namespace Breeze
         */
         const qreal width( m_iconSize.width() );
         auto d = qobject_cast<Decoration*>( decoration() );
-        setupMacButtonPainter(painter, geometry().topLeft(), width, d->internalSettings()->animationsEnabled());
+        const bool animationsEnabled = d->internalSettings()->animationsEnabled();
+        setupMacButtonPainter(painter, geometry().topLeft(), width, false);
 
         bool inactiveWindow( d && !d->window()->isActive() );
         bool isMatchTitleBarColor( d && d->internalSettings()->matchColorForTitleBar() );
@@ -761,15 +805,25 @@ namespace Breeze
 
         QPen symbol_pen( symbolColor );
         symbol_pen.setJoinStyle( Qt::MiterJoin );
-        if ( d->internalSettings()->animationsEnabled() )
-          symbol_pen.setWidthF( 1.7*qMax((qreal)1.0, 20/width ) );
-        else
-          symbol_pen.setWidthF( 9./7.*1.7*qMax((qreal)1.0, 20/width ) );
+        symbol_pen.setWidthF( 9./7.*1.7*qMax((qreal)1.0, 20/width ) );
 
         QColor trafficLightGlyphColor(Qt::black);
         trafficLightGlyphColor.setAlphaF(0.6);
         QPen trafficLightGlyphPen(symbol_pen);
         trafficLightGlyphPen.setColor(trafficLightGlyphColor);
+
+        const qreal hoverProgress = animationsEnabled
+            ? m_animation->currentValue().toReal()
+            : (this->hovered() ? 1.0 : 0.0);
+        const bool showHoverGlyph = hoverProgress > 0.0;
+        QColor animatedTrafficLightGlyphColor(trafficLightGlyphColor);
+        animatedTrafficLightGlyphColor.setAlphaF(trafficLightGlyphColor.alphaF() * hoverProgress);
+        QPen animatedTrafficLightGlyphPen(trafficLightGlyphPen);
+        animatedTrafficLightGlyphPen.setColor(animatedTrafficLightGlyphColor);
+
+        // Mac Sierra always uses the compact geometry. Hover animation is
+        // applied only to glyph opacity, never to circle or glyph scale.
+        const qreal outerCircleRadius = 9.0;
 
         switch( type() )
         {
@@ -787,14 +841,11 @@ namespace Breeze
                   button_color = QColor(200, 200, 200);
                 QPen button_pen( qGray(titleBarColor.rgb()) < 69 ? button_color.lighter(115) : button_color.darker(115) );
                 button_pen.setJoinStyle( Qt::MiterJoin );
-                if ( d->internalSettings()->animationsEnabled() )
-                  button_pen.setWidthF( PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
-                else
-                  button_pen.setWidthF( 9./7.*PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
+                button_pen.setWidthF( 9./7.*PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
                 painter->setBrush( button_color );
                 painter->setPen( button_pen );
 
-                qreal r = this->buttonRadius();
+                const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
                 painter->drawEllipse( c, r, r );
                 painter->setBrush( Qt::NoBrush );
@@ -802,9 +853,9 @@ namespace Breeze
                 {
                   drawModifiedDot(painter, c, r, trafficLightGlyphColor);
                 }
-                else if ( this->hovered() )
+                else if ( showHoverGlyph )
                 {
-                  painter->setPen( trafficLightGlyphPen );
+                  painter->setPen( animatedTrafficLightGlyphPen );
                   // it's a cross
                   painter->drawLine( QPointF( 6, 6 ), QPointF( 12, 12 ) );
                   painter->drawLine( QPointF( 6, 12 ), QPointF( 12, 6 ) );
@@ -825,18 +876,15 @@ namespace Breeze
                   button_color = QColor(200, 200, 200);
                 QPen button_pen( qGray(titleBarColor.rgb()) < 69 ? button_color.lighter(115) : button_color.darker(115) );
                 button_pen.setJoinStyle( Qt::MiterJoin );
-                if ( d->internalSettings()->animationsEnabled() )
-                  button_pen.setWidthF( PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
-                else
-                  button_pen.setWidthF( 9./7.*PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
+                button_pen.setWidthF( 9./7.*PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
                 painter->setBrush( button_color );
                 painter->setPen( button_pen );
 
-                const qreal r = this->buttonRadius();
+                const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
                 painter->drawEllipse( c, r, r );
                 painter->setBrush( Qt::NoBrush );
-                if ( this->hovered() )
+                if ( showHoverGlyph )
                 {
                   painter->setPen( Qt::NoPen );
 
@@ -863,8 +911,8 @@ namespace Breeze
                       path2.lineTo(13, 11);
                   }
 
-                  painter->fillPath(path1, QBrush(trafficLightGlyphColor));
-                  painter->fillPath(path2, QBrush(trafficLightGlyphColor));
+                  painter->fillPath(path1, QBrush(animatedTrafficLightGlyphColor));
+                  painter->fillPath(path2, QBrush(animatedTrafficLightGlyphColor));
                 }
                 break;
             }
@@ -882,20 +930,17 @@ namespace Breeze
                   button_color = QColor(200, 200, 200);
                 QPen button_pen( qGray(titleBarColor.rgb()) < 69 ? button_color.lighter(115) : button_color.darker(115) );
                 button_pen.setJoinStyle( Qt::MiterJoin );
-                if ( d->internalSettings()->animationsEnabled() )
-                  button_pen.setWidthF( PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
-                else
-                  button_pen.setWidthF( 9./7.*PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
+                button_pen.setWidthF( 9./7.*PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
                 painter->setBrush( button_color );
                 painter->setPen( button_pen );
 
-                qreal r = this->buttonRadius();
+                const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
                 painter->drawEllipse( c, r, r );
                 painter->setBrush( Qt::NoBrush );
-                if ( this->hovered() )
+                if ( showHoverGlyph )
                 {
-                  painter->setPen( trafficLightGlyphPen );
+                  painter->setPen( animatedTrafficLightGlyphPen );
                   painter->drawLine( QPointF( 5, 9 ), QPointF( 13, 9 ) );
                 }
                 break;
@@ -912,22 +957,19 @@ namespace Breeze
                   button_color = QColor(200, 200, 200);
                 QPen button_pen( qGray(titleBarColor.rgb()) < 69 ? button_color.lighter(115) : button_color.darker(115) );
                 button_pen.setJoinStyle( Qt::MiterJoin );
-                if ( d->internalSettings()->animationsEnabled() )
-                  button_pen.setWidthF( PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
-                else
-                  button_pen.setWidthF( 9./7.*PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
+                button_pen.setWidthF( 9./7.*PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
                 painter->setBrush( button_color );
                 painter->setPen( button_pen );
 
-                qreal r = this->buttonRadius();
+                const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
                 painter->drawEllipse( c, r, r );
                 painter->setBrush( Qt::NoBrush );
 
-                if ( this->hovered() || isChecked() )
+                if ( showHoverGlyph || isChecked() )
                 {
                   painter->setPen( Qt::NoPen );
-                  painter->setBrush(QBrush(trafficLightGlyphColor));
+                  painter->setBrush(QBrush(isChecked() ? trafficLightGlyphColor : animatedTrafficLightGlyphColor));
                   painter->drawEllipse( QRectF( 6, 6, 6, 6 ) );
                 }
                 break;
@@ -944,14 +986,11 @@ namespace Breeze
                   button_color = QColor(200, 200, 200);
                 QPen button_pen( qGray(titleBarColor.rgb()) < 69 ? button_color.lighter(115) : button_color.darker(115) );
                 button_pen.setJoinStyle( Qt::MiterJoin );
-                if ( d->internalSettings()->animationsEnabled() )
-                  button_pen.setWidthF( PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
-                else
-                  button_pen.setWidthF( 9./7.*PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
+                button_pen.setWidthF( 9./7.*PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
                 painter->setBrush( button_color );
                 painter->setPen( button_pen );
 
-                qreal r = this->buttonRadius();
+                const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
                 painter->drawEllipse( c, r, r );
                 painter->setBrush( Qt::NoBrush );
@@ -968,15 +1007,15 @@ namespace Breeze
                     painter->fillPath(path, QBrush(trafficLightGlyphColor));
 
                 }
-                else if ( this->hovered() ) {
-                    painter->setPen( trafficLightGlyphPen );
+                else if ( showHoverGlyph ) {
+                    painter->setPen( animatedTrafficLightGlyphPen );
                     painter->drawLine( QPointF( 6, 6 ), QPointF( 12, 6 ) );
                     painter->setPen( Qt::NoPen );
                     QPainterPath path;
                     path.moveTo(9, 7);
                     path.lineTo(5, 12);
                     path.lineTo(13, 12);
-                    painter->fillPath(path, QBrush(trafficLightGlyphColor));
+                    painter->fillPath(path, QBrush(animatedTrafficLightGlyphColor));
                 }
                 break;
 
@@ -993,19 +1032,16 @@ namespace Breeze
                   button_color = QColor(200, 200, 200);
                 QPen button_pen( qGray(titleBarColor.rgb()) < 69 ? button_color.lighter(115) : button_color.darker(115) );
                 button_pen.setJoinStyle( Qt::MiterJoin );
-                if ( d->internalSettings()->animationsEnabled() )
-                  button_pen.setWidthF( PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
-                else
-                  button_pen.setWidthF( 9./7.*PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
+                button_pen.setWidthF( 9./7.*PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
                 painter->setBrush( button_color );
                 painter->setPen( button_pen );
 
-                qreal r = this->buttonRadius();
+                const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
                 painter->drawEllipse( c, r, r );
                 painter->setBrush( Qt::NoBrush );
 
-                if ( this->hovered() || isChecked() )
+                if ( showHoverGlyph || isChecked() )
                 {
                   painter->setPen( Qt::NoPen );
 
@@ -1013,7 +1049,7 @@ namespace Breeze
                   path.moveTo(9, 12);
                   path.lineTo(5, 6);
                   path.lineTo(13, 6);
-                  painter->fillPath(path, QBrush(trafficLightGlyphColor));
+                  painter->fillPath(path, QBrush(isChecked() ? trafficLightGlyphColor : animatedTrafficLightGlyphColor));
                 }
                 break;
 
@@ -1045,19 +1081,16 @@ namespace Breeze
                 //   button_color = QColor(200, 200, 200);
                 QPen button_pen( qGray(titleBarColor.rgb()) < 69 ? button_color.lighter(115) : button_color.darker(115) );
                 button_pen.setJoinStyle( Qt::MiterJoin );
-                if ( d->internalSettings()->animationsEnabled() )
-                  button_pen.setWidthF( PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
-                else
-                  button_pen.setWidthF( 9./7.*PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
+                button_pen.setWidthF( 9./7.*PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
                 painter->setBrush( button_color );
                 painter->setPen( button_pen );
 
-                qreal r = this->buttonRadius();
+                const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
                 painter->drawEllipse( c, r, r );
                 painter->setBrush( Qt::NoBrush );
 
-                if ( this->hovered() || isChecked() )
+                if ( showHoverGlyph || isChecked() )
                 {
                   painter->setPen( Qt::NoPen );
 
@@ -1065,7 +1098,7 @@ namespace Breeze
                   path.moveTo(9, 6);
                   path.lineTo(5, 12);
                   path.lineTo(13, 12);
-                  painter->fillPath(path, QBrush(trafficLightGlyphColor));
+                  painter->fillPath(path, QBrush(isChecked() ? trafficLightGlyphColor : animatedTrafficLightGlyphColor));
                 }
                 break;
             }
@@ -1114,21 +1147,18 @@ namespace Breeze
                   button_color = QColor(200, 200, 200);
                 QPen button_pen( qGray(titleBarColor.rgb()) < 69 ? button_color.lighter(115) : button_color.darker(115) );
                 button_pen.setJoinStyle( Qt::MiterJoin );
-                if ( d->internalSettings()->animationsEnabled() )
-                  button_pen.setWidthF( PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
-                else
-                  button_pen.setWidthF( 9./7.*PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
+                button_pen.setWidthF( 9./7.*PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
                 painter->setBrush( button_color );
                 painter->setPen( button_pen );
 
-                qreal r = this->buttonRadius();
+                const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
                 painter->drawEllipse( c, r, r );
                 painter->setBrush( Qt::NoBrush );
 
-                if ( this->hovered() || isChecked() )
+                if ( showHoverGlyph || isChecked() )
                 {
-                  painter->setPen( trafficLightGlyphPen );
+                  painter->setPen(isChecked() ? trafficLightGlyphPen : animatedTrafficLightGlyphPen);
                   QPainterPath path;
                   path.moveTo( 6, 6 );
                   path.arcTo( QRectF( 5.5, 4, 7.5, 4.5 ), 180, -180 );
