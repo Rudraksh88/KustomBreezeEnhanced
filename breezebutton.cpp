@@ -37,7 +37,18 @@ namespace Breeze
 
     namespace
     {
-        constexpr qreal ModifiedDotRadiusRatio = 0.38;
+        constexpr qreal ModifiedDotRadiusRatio = 0.4;
+
+        void setupMacButtonPainter(QPainter *painter, const QPointF &topLeft, qreal iconWidth, bool animationsEnabled)
+        {
+            const qreal scale = (animationsEnabled ? 1.0 : 7.0 / 9.0) * iconWidth / 20.0;
+
+            // Scale around the exact icon center. The former scale-then-(4, 4)
+            // transform placed the no-animation center on a fractional offset.
+            painter->translate(topLeft + QPointF(iconWidth / 2.0, iconWidth / 2.0));
+            painter->scale(scale, scale);
+            painter->translate(-9.0, -9.0);
+        }
 
         void drawModifiedDot(QPainter *painter, const QPointF &center, qreal outerCircleRadius, const QColor &color)
         {
@@ -671,18 +682,9 @@ namespace Breeze
         this makes all further rendering and scaling simpler
         all further rendering is preformed inside QRect( 0, 0, 18, 18 )
         */
-        painter->translate( geometry().topLeft() );
-
         const qreal width( m_iconSize.width() );
         auto d = qobject_cast<Decoration*>( decoration() );
-        if ( d->internalSettings()->animationsEnabled() ) {
-          painter->scale( width/20, width/20 );
-          painter->translate( 1, 1 );
-        }
-        else {
-          painter->scale( 7./9.*width/20, 7./9.*width/20 );
-          painter->translate( 4, 4 );
-        }
+        setupMacButtonPainter(painter, geometry().topLeft(), width, d->internalSettings()->animationsEnabled());
 
         bool inactiveWindow( d && !d->window()->isActive() );
         bool isMatchTitleBarColor( d && d->internalSettings()->matchColorForTitleBar() );
@@ -1098,18 +1100,9 @@ namespace Breeze
     void Button::drawIconMacMono( QPainter *painter ) const {
         painter->setRenderHints( QPainter::Antialiasing );
 
-        painter->translate( geometry().topLeft() );
-
         const qreal width( m_iconSize.width() );
         auto d = qobject_cast<Decoration*>( decoration() );
-        if ( d->internalSettings()->animationsEnabled() ) {
-          painter->scale( width/20, width/20 );
-          painter->translate( 1, 1 );
-        }
-        else {
-          painter->scale( 7./9.*width/20, 7./9.*width/20 );
-          painter->translate( 4, 4 );
-        }
+        setupMacButtonPainter(painter, geometry().topLeft(), width, d->internalSettings()->animationsEnabled());
 
         // New monochrome colors using QColor(R,G,B,A)
         QColor ellipseColor( QColor(255, 255, 255, 55) );
@@ -1606,18 +1599,9 @@ namespace Breeze
         this makes all further rendering and scaling simpler
         all further rendering is preformed inside QRect( 0, 0, 18, 18 )
         */
-        painter->translate( geometry().topLeft() );
-
         const qreal width( m_iconSize.width() );
         auto d = qobject_cast<Decoration*>( decoration() );
-        if ( d->internalSettings()->animationsEnabled() ) {
-          painter->scale( width/20, width/20 );
-          painter->translate( 1, 1 );
-        }
-        else {
-          painter->scale( 7./9.*width/20, 7./9.*width/20 );
-          painter->translate( 4, 4 );
-        }
+        setupMacButtonPainter(painter, geometry().topLeft(), width, d->internalSettings()->animationsEnabled());
 
         bool inactiveWindow( d && !d->window()->isActive() );
         bool isMatchTitleBarColor( d && d->internalSettings()->matchColorForTitleBar() );
@@ -2037,18 +2021,9 @@ namespace Breeze
         this makes all further rendering and scaling simpler
         all further rendering is preformed inside QRect( 0, 0, 18, 18 )
         */
-        painter->translate( geometry().topLeft() );
-
         const qreal width( m_iconSize.width() );
         auto d = qobject_cast<Decoration*>( decoration() );
-        if ( d->internalSettings()->animationsEnabled() ) {
-          painter->scale( width/20, width/20 );
-          painter->translate( 1, 1 );
-        }
-        else {
-          painter->scale( 7./9.*width/20, 7./9.*width/20 );
-          painter->translate( 4, 4 );
-        }
+        setupMacButtonPainter(painter, geometry().topLeft(), width, d->internalSettings()->animationsEnabled());
 
         bool inactiveWindow( d && !d->window()->isActive() );
         bool useActiveButtonStyle( d && d->internalSettings()->buttonStyle() == 5 );
@@ -2538,18 +2513,9 @@ namespace Breeze
         this makes all further rendering and scaling simpler
         all further rendering is preformed inside QRect( 0, 0, 18, 18 )
         */
-        painter->translate( geometry().topLeft() );
-
         const qreal width( m_iconSize.width() );
         auto d = qobject_cast<Decoration*>( decoration() );
-        if ( d->internalSettings()->animationsEnabled() ) {
-          painter->scale( width/20, width/20 );
-          painter->translate( 1, 1 );
-        }
-        else {
-          painter->scale( 7./9.*width/20, 7./9.*width/20 );
-          painter->translate( 4, 4 );
-        }
+        setupMacButtonPainter(painter, geometry().topLeft(), width, d->internalSettings()->animationsEnabled());
 
         bool inactiveWindow( d && !d->window()->isActive() );
         bool useActiveButtonStyle( d && d->internalSettings()->buttonStyle() == 8 );
