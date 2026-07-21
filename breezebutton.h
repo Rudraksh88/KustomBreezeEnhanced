@@ -129,6 +129,9 @@ namespace Breeze
         bool hovered() const;
         //@}
 
+        //* whether the window advertises a potentially destructive close
+        bool shouldShowCloseConfirmationDot() const;
+
         //*@button radius
         //@{
         qreal buttonRadius() const;

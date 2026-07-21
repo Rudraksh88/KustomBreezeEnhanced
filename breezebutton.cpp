@@ -26,6 +26,7 @@
 
 #include <QPainter>
 #include <QPainterPath>
+#include <QRegularExpression>
 
 namespace Breeze
 {
@@ -33,6 +34,22 @@ namespace Breeze
     using KDecoration3::ColorRole;
     using KDecoration3::ColorGroup;
     using KDecoration3::DecorationButtonType;
+
+    namespace
+    {
+        constexpr qreal ModifiedDotRadiusRatio = 0.38;
+
+        void drawModifiedDot(QPainter *painter, const QPointF &center, qreal outerCircleRadius, const QColor &color)
+        {
+            const qreal innerCircleRadius = outerCircleRadius * ModifiedDotRadiusRatio;
+
+            painter->save();
+            painter->setPen(Qt::NoPen);
+            painter->setBrush(color);
+            painter->drawEllipse(center, innerCircleRadius, innerCircleRadius);
+            painter->restore();
+        }
+    }
 
 
     //__________________________________________________________________
@@ -58,6 +75,11 @@ namespace Breeze
 
         // connections
         connect(decoration->window(), SIGNAL(iconChanged(QIcon)), this, SLOT(update()));
+        if (type == DecorationButtonType::Close) {
+            connect(decoration->window(), &KDecoration3::DecoratedWindow::captionChanged, this, [this]() {
+                update();
+            });
+        }
         connect(decoration->settings().get(), &KDecoration3::DecorationSettings::reconfigured, this, &Button::reconfigure);
         connect( this, &KDecoration3::DecorationButton::hoveredChanged, this, &Button::updateAnimationState );
 
@@ -694,6 +716,11 @@ namespace Breeze
         else
           symbol_pen.setWidthF( 9./7.*1.7*qMax((qreal)1.0, 20/width ) );
 
+        QColor trafficLightGlyphColor(Qt::black);
+        trafficLightGlyphColor.setAlphaF(0.5);
+        QPen trafficLightGlyphPen(symbol_pen);
+        trafficLightGlyphPen.setColor(trafficLightGlyphColor);
+
         switch( type() )
         {
 
@@ -721,9 +748,13 @@ namespace Breeze
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
                 painter->drawEllipse( c, r, r );
                 painter->setBrush( Qt::NoBrush );
-                if ( this->hovered() )
+                if (shouldShowCloseConfirmationDot())
                 {
-                  painter->setPen( symbol_pen );
+                  drawModifiedDot(painter, c, r, trafficLightGlyphColor);
+                }
+                else if ( this->hovered() )
+                {
+                  painter->setPen( trafficLightGlyphPen );
                   // it's a cross
                   painter->drawLine( QPointF( 6, 6 ), QPointF( 12, 12 ) );
                   painter->drawLine( QPointF( 6, 12 ), QPointF( 12, 6 ) );
@@ -751,7 +782,7 @@ namespace Breeze
                 painter->setBrush( button_color );
                 painter->setPen( button_pen );
 
-                qreal r = this->buttonRadius();
+                const qreal r = this->buttonRadius();
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
                 painter->drawEllipse( c, r, r );
                 painter->setBrush( Qt::NoBrush );
@@ -782,8 +813,8 @@ namespace Breeze
                       path2.lineTo(13, 11);
                   }
 
-                  painter->fillPath(path1, QBrush(symbolColor));
-                  painter->fillPath(path2, QBrush(symbolColor));
+                  painter->fillPath(path1, QBrush(trafficLightGlyphColor));
+                  painter->fillPath(path2, QBrush(trafficLightGlyphColor));
                 }
                 break;
             }
@@ -814,7 +845,7 @@ namespace Breeze
                 painter->setBrush( Qt::NoBrush );
                 if ( this->hovered() )
                 {
-                  painter->setPen( symbol_pen );
+                  painter->setPen( trafficLightGlyphPen );
                   painter->drawLine( QPointF( 5, 9 ), QPointF( 13, 9 ) );
                 }
                 break;
@@ -1100,20 +1131,25 @@ namespace Breeze
         else
           button_pen.setWidthF( 9./7.*PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
 
+        const qreal outerCircleRadius = this->buttonRadius();
+        const QPointF circleCenter(static_cast<qreal>(9), static_cast<qreal>(9));
+
         // Draw button ellipse for all types except KeepAbove when not hovered or checked
         if (type() != DecorationButtonType::KeepAbove || this->hovered() || isChecked())
         {
             painter->setBrush( ellipseColor );
             painter->setPen( button_pen );
-
-            qreal r = this->buttonRadius();
-            QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
-            painter->drawEllipse( c, r, r );
+            painter->drawEllipse(circleCenter, outerCircleRadius, outerCircleRadius);
         }
 
         painter->setBrush( Qt::NoBrush );
 
-        if ( this->hovered() ||
+        const bool showModifiedDot = type() == DecorationButtonType::Close && shouldShowCloseConfirmationDot();
+        if (showModifiedDot)
+        {
+            drawModifiedDot(painter, circleCenter, outerCircleRadius, symbolColor);
+        }
+        else if ( this->hovered() ||
             (type() == DecorationButtonType::KeepAbove && isChecked()) ||
             (type() == DecorationButtonType::OnAllDesktops && isChecked()) ||
             (type() == DecorationButtonType::KeepBelow && isChecked()) )
@@ -1638,11 +1674,15 @@ namespace Breeze
                 painter->setBrush( button_color );
                 painter->setPen( button_pen );
 
-                qreal r = this->buttonRadius();
+                const qreal r = this->buttonRadius();
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
                 painter->drawEllipse( c, r, r );
                 painter->setBrush( Qt::NoBrush );
-                if ( this->hovered() )
+                if (shouldShowCloseConfirmationDot())
+                {
+                  drawModifiedDot(painter, c, r, symbolColor);
+                }
+                else if ( this->hovered() )
                 {
                   painter->setPen( symbol_pen );
                   // it's a cross
@@ -2073,11 +2113,15 @@ namespace Breeze
                   painter->setBrush( button_color );
                   painter->setPen( button_pen );
                 }
-                qreal r = this->buttonRadius();
+                const qreal r = this->buttonRadius();
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
                 painter->drawEllipse( c, r, r );
                 painter->setBrush( Qt::NoBrush );
-                if ( this->hovered() || ( inactiveWindow && !useActiveButtonStyle ) || useInactiveButtonStyle )
+                if (shouldShowCloseConfirmationDot())
+                {
+                  drawModifiedDot(painter, c, r, symbolColor);
+                }
+                else if ( this->hovered() || ( inactiveWindow && !useActiveButtonStyle ) || useInactiveButtonStyle )
                 {
                   painter->setPen( symbol_pen );
                   // it's a cross
@@ -2570,11 +2614,15 @@ namespace Breeze
                   painter->setBrush( button_color );
                   painter->setPen( button_pen );
                 }
-                qreal r = this->buttonRadius();
+                const qreal r = this->buttonRadius();
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
                 painter->drawEllipse( c, r, r );
                 painter->setBrush( Qt::NoBrush );
-                if ( this->hovered() || ( inactiveWindow && !useActiveButtonStyle ) || useInactiveButtonStyle )
+                if (shouldShowCloseConfirmationDot())
+                {
+                  drawModifiedDot(painter, c, r, symbolColor);
+                }
+                else if ( this->hovered() || ( inactiveWindow && !useActiveButtonStyle ) || useInactiveButtonStyle )
                 {
                   painter->setPen( symbol_pen );
                   // it's a cross
@@ -3062,10 +3110,17 @@ namespace Breeze
                 button_color.setAlpha( 255 );
                 QColor mycolor = this->mixColors(button_color.darker( 100 ), symbolColor, m_opacity);
                 symbol_pen.setColor(mycolor);
-                painter->setPen( symbol_pen );
-                // it's a cross
-                painter->drawLine( QPointF( 6, 6 ), QPointF( 12, 12 ) );
-                painter->drawLine( QPointF( 6, 12 ), QPointF( 12, 6 ) );
+                if (shouldShowCloseConfirmationDot())
+                {
+                  drawModifiedDot(painter, c, r, mycolor);
+                }
+                else
+                {
+                  painter->setPen( symbol_pen );
+                  // it's a cross
+                  painter->drawLine( QPointF( 6, 6 ), QPointF( 12, 12 ) );
+                  painter->drawLine( QPointF( 6, 12 ), QPointF( 12, 6 ) );
+                }
 
                 break;
             }
@@ -3397,10 +3452,17 @@ namespace Breeze
                 button_color.setAlpha( 255 );
                 QColor mycolor = this->mixColors(button_color.darker( 100 ), symbolColor, m_opacity);
                 symbol_pen.setColor(mycolor);
-                painter->setPen( symbol_pen );
-                // it's a cross
-                painter->drawLine( QPointF( 5, 5 ), QPointF( 13, 13 ) );
-                painter->drawLine( QPointF( 5, 13 ), QPointF( 13, 5 ) );
+                if (shouldShowCloseConfirmationDot())
+                {
+                  drawModifiedDot(painter, c, r, mycolor);
+                }
+                else
+                {
+                  painter->setPen( symbol_pen );
+                  // it's a cross
+                  painter->drawLine( QPointF( 5, 5 ), QPointF( 13, 13 ) );
+                  painter->drawLine( QPointF( 5, 13 ), QPointF( 13, 5 ) );
+                }
 
                 break;
             }
@@ -3730,7 +3792,7 @@ namespace Breeze
             painter->setPen( Qt::NoPen );
             painter->setBrush( button_color );
 
-            qreal r = static_cast<qreal>(7)
+            const qreal r = static_cast<qreal>(7)
             + static_cast<qreal>(2) * m_animation->currentValue().toReal();
             QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
             painter->drawEllipse( c, r, r );
@@ -3740,10 +3802,17 @@ namespace Breeze
             symbolBgdColor.setAlpha( 255 );
             QColor mycolor = this->mixColors(button_color, symbolBgdColor, m_opacity);
             symbol_pen.setColor(mycolor);
-            painter->setPen( symbol_pen );
-            // it's a cross
-            painter->drawLine( QPointF( 6, 6 ), QPointF( 12, 12 ) );
-            painter->drawLine( QPointF( 6, 12 ), QPointF( 12, 6 ) );
+            if (shouldShowCloseConfirmationDot())
+            {
+              drawModifiedDot(painter, c, r, mycolor);
+            }
+            else
+            {
+              painter->setPen( symbol_pen );
+              // it's a cross
+              painter->drawLine( QPointF( 6, 6 ), QPointF( 12, 12 ) );
+              painter->drawLine( QPointF( 6, 12 ), QPointF( 12, 6 ) );
+            }
 
             break;
           }
@@ -4114,10 +4183,17 @@ namespace Breeze
                 symbolBgdColor.setAlpha( 255 );
                 QColor mycolor = this->mixColors(button_color, symbolBgdColor, m_opacity);
                 symbol_pen.setColor(mycolor);
-                painter->setPen( symbol_pen );
-                // it's a cross
-                painter->drawLine( QPointF( 5, 5 ), QPointF( 13, 13 ) );
-                painter->drawLine( QPointF( 5, 13 ), QPointF( 13, 5 ) );
+                if (shouldShowCloseConfirmationDot())
+                {
+                  drawModifiedDot(painter, c, r, mycolor);
+                }
+                else
+                {
+                  painter->setPen( symbol_pen );
+                  // it's a cross
+                  painter->drawLine( QPointF( 5, 5 ), QPointF( 13, 13 ) );
+                  painter->drawLine( QPointF( 5, 13 ), QPointF( 13, 5 ) );
+                }
 
                 break;
             }
@@ -4546,6 +4622,40 @@ namespace Breeze
     {
       auto d = qobject_cast<Decoration*>( decoration() );
       return isHovered() || ( d->buttonHovered() && d->internalSettings()->unisonHovering() );
+    }
+
+    //__________________________________________________________________
+    bool Button::shouldShowCloseConfirmationDot() const
+    {
+        const auto d = qobject_cast<Decoration *>(decoration());
+        const auto decoratedWindow = d ? d->window() : nullptr;
+        if (!decoratedWindow)
+            return false;
+
+        // KDecoration3 currently has no modified-state API. Prefer an explicit
+        // property if a backend adds one before falling back to the caption.
+        static constexpr const char *stateProperties[] = {
+            "modified",
+            "windowModified",
+            "closeRequiresConfirmation",
+        };
+        bool hasExplicitState = false;
+        bool explicitState = false;
+        for (const char *propertyName : stateProperties) {
+            const QVariant propertyValue = decoratedWindow->property(propertyName);
+            if (propertyValue.isValid()) {
+                hasExplicitState = true;
+                explicitState = explicitState || propertyValue.toBool();
+            }
+        }
+        if (hasExplicitState)
+            return explicitState;
+
+        // Qt/KDE put '*' at the document boundary for windowModified. Some
+        // non-Qt applications use a leading bullet for the same purpose.
+        static const QRegularExpression modifiedMarker(QStringLiteral(
+            R"((?:^[*●•]\s*)|(?:[*●•]{1,2}\s*(?=(?:[-–—]\s)|$)))"));
+        return modifiedMarker.match(decoratedWindow->caption().trimmed()).hasMatch();
     }
 
     //________________________________________________________________
