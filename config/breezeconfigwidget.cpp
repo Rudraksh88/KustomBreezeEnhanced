@@ -27,6 +27,7 @@
 #include "breezeexceptionlist.h"
 #include "breezesettings.h"
 
+#include <KConfigGroup>
 #include <KLocalizedString>
 
 #include <QDBusConnection>
@@ -52,7 +53,9 @@ ConfigWidget::ConfigWidget(QObject *parent, const KPluginMetaData &data, const Q
     connect(m_ui.iconIncludedInAlignment, &QAbstractButton::clicked, this, &ConfigWidget::updateChanged);
     connect(m_ui.dimAppName, &QAbstractButton::clicked, this, &ConfigWidget::updateChanged);
     connect(m_ui.appNameOpacity, SIGNAL(valueChanged(int)), SLOT(updateChanged()));
-    connect(m_ui.buttonSize, SIGNAL(currentIndexChanged(int)), SLOT(updateChanged()));
+    connect(m_ui.buttonSizeSlider, &QSlider::valueChanged, m_ui.buttonSizeSpinBox, &QSpinBox::setValue);
+    connect(m_ui.buttonSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), m_ui.buttonSizeSlider, &QSlider::setValue);
+    connect(m_ui.buttonSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &ConfigWidget::updateChanged);
     connect(m_ui.buttonSpacing, QOverload<int>::of(&QSpinBox::valueChanged), [this](int /*i*/) {
         updateChanged();
     });
@@ -102,6 +105,9 @@ void ConfigWidget::load()
     // create internal settings and load from rc files
     m_internalSettings = InternalSettingsPtr(new InternalSettings());
     m_internalSettings->load();
+    const KConfigGroup windecoGroup(m_configuration, QStringLiteral("Windeco"));
+    m_internalSettings->setButtonSize(ButtonSizing::fromConfigValue(windecoGroup.readEntry(QStringLiteral("ButtonSize"), QString()),
+                                                                     m_internalSettings->buttonSize()));
 
     // assign to ui
     m_ui.titleAlignment->setCurrentIndex(m_internalSettings->titleAlignment());
@@ -111,7 +117,7 @@ void ConfigWidget::load()
     m_ui.iconIncludedInAlignment->setChecked(m_internalSettings->iconIncludedInAlignment());
     m_ui.dimAppName->setChecked(m_internalSettings->dimAppName());
     m_ui.appNameOpacity->setValue(m_internalSettings->appNameOpacity());
-    m_ui.buttonSize->setCurrentIndex(m_internalSettings->buttonSize());
+    m_ui.buttonSizeSpinBox->setValue(m_internalSettings->buttonSize());
     m_ui.buttonSpacing->setValue(m_internalSettings->buttonSpacing());
     m_ui.buttonPadding->setValue(m_internalSettings->buttonPadding());
     m_ui.hOffset->setValue(m_internalSettings->hOffset());
@@ -171,7 +177,7 @@ void ConfigWidget::save()
     m_internalSettings->setIconIncludedInAlignment(m_ui.iconIncludedInAlignment->isChecked());
     m_internalSettings->setDimAppName(m_ui.dimAppName->isChecked());
     m_internalSettings->setAppNameOpacity(m_ui.appNameOpacity->value());
-    m_internalSettings->setButtonSize(m_ui.buttonSize->currentIndex());
+    m_internalSettings->setButtonSize(m_ui.buttonSizeSpinBox->value());
     m_internalSettings->setButtonSpacing(m_ui.buttonSpacing->value());
     m_internalSettings->setButtonPadding(m_ui.buttonPadding->value());
     m_internalSettings->setHOffset(m_ui.hOffset->value());
@@ -241,7 +247,7 @@ void ConfigWidget::defaults()
     m_ui.iconIncludedInAlignment->setChecked(m_internalSettings->iconIncludedInAlignment());
     m_ui.dimAppName->setChecked(m_internalSettings->dimAppName());
     m_ui.appNameOpacity->setValue(m_internalSettings->appNameOpacity());
-    m_ui.buttonSize->setCurrentIndex(m_internalSettings->buttonSize());
+    m_ui.buttonSizeSpinBox->setValue(m_internalSettings->buttonSize());
     m_ui.buttonSpacing->setValue(m_internalSettings->buttonSpacing());
     m_ui.buttonPadding->setValue(m_internalSettings->buttonPadding());
     m_ui.hOffset->setValue(m_internalSettings->hOffset());
@@ -298,7 +304,7 @@ void ConfigWidget::updateChanged()
         modified = true;
     else if (m_ui.appNameOpacity->value() != m_internalSettings->appNameOpacity())
         modified = true;
-    else if (m_ui.buttonSize->currentIndex() != m_internalSettings->buttonSize())
+    else if (m_ui.buttonSizeSpinBox->value() != m_internalSettings->buttonSize())
         modified = true;
     else if (m_ui.buttonSpacing->value() != m_internalSettings->buttonSpacing())
         modified = true;

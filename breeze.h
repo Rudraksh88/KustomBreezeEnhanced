@@ -23,8 +23,9 @@
 
 #include "breezesettings.h"
 
-#include <QSharedPointer>
 #include <QList>
+#include <QSharedPointer>
+#include <QString>
 
 namespace Breeze
 {
@@ -32,6 +33,55 @@ namespace Breeze
     using InternalSettingsPtr = QSharedPointer<InternalSettings>;
     using InternalSettingsList = QList<InternalSettingsPtr>;
     using InternalSettingsListIterator = QListIterator<InternalSettingsPtr>;
+
+    namespace ButtonSizing
+    {
+        static constexpr int Minimum = 10;
+        static constexpr int Default = 28;
+        static constexpr int Maximum = 64;
+
+        inline int fromLegacyIndex(int value)
+        {
+            // Pixel equivalents of the former grid-unit presets at the
+            // standard 18 px Plasma grid unit.
+            static constexpr int sizes[] = {18, 25, 28, 36, 45};
+            return value >= 0 && value < 5 ? sizes[value] : Default;
+        }
+
+        inline int fromConfigValue(const QString &value, int fallback)
+        {
+            if (value.compare(QStringLiteral("ButtonTiny"), Qt::CaseInsensitive) == 0)
+                return fromLegacyIndex(0);
+            if (value.compare(QStringLiteral("ButtonSmall"), Qt::CaseInsensitive) == 0)
+                return fromLegacyIndex(1);
+            if (value.compare(QStringLiteral("ButtonDefault"), Qt::CaseInsensitive) == 0)
+                return fromLegacyIndex(2);
+            if (value.compare(QStringLiteral("ButtonLarge"), Qt::CaseInsensitive) == 0)
+                return fromLegacyIndex(3);
+            if (value.compare(QStringLiteral("ButtonVeryLarge"), Qt::CaseInsensitive) == 0)
+                return fromLegacyIndex(4);
+
+            bool valid = false;
+            const int numericValue = value.toInt(&valid);
+            if (!valid)
+                return fallback;
+
+            // ItemEnum could also store an out-of-range value numerically.
+            // Values below the new slider minimum therefore represent a
+            // legacy preset index, not a pixel size.
+            if (numericValue >= 0 && numericValue < 5)
+                return fromLegacyIndex(numericValue);
+
+            return qBound(Minimum, numericValue, Maximum);
+        }
+    }
+
+    namespace TitleBarIconSizing
+    {
+        // Preserve the scale used by the former default 28 px button and its
+        // padding without tying the centered icon to live button geometry.
+        static constexpr int ReferenceHeight = 36;
+    }
 
     //* metrics
     enum Metrics

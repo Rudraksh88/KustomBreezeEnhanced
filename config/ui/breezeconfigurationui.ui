@@ -86,7 +86,7 @@
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
          <property name="buddy">
-          <cstring>buttonSize</cstring>
+          <cstring>buttonSizeSlider</cstring>
          </property>
         </widget>
        </item>
@@ -183,34 +183,41 @@
            </property>
          </widget>
        </item>
-       <item row="1" column="2">
-        <widget class="QComboBox" name="buttonSize">
+       <item row="1" column="2" colspan="2">
+        <layout class="QHBoxLayout" name="buttonSizeLayout">
          <item>
-          <property name="text">
-           <string>Tiny</string>
-          </property>
+          <widget class="QSlider" name="buttonSizeSlider">
+           <property name="minimum">
+            <number>10</number>
+           </property>
+           <property name="maximum">
+            <number>64</number>
+           </property>
+           <property name="value">
+            <number>28</number>
+           </property>
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
          </item>
          <item>
-          <property name="text">
-           <string comment="@item:inlistbox Button size:">Small</string>
-          </property>
+          <widget class="QSpinBox" name="buttonSizeSpinBox">
+           <property name="suffix">
+            <string> px</string>
+           </property>
+           <property name="minimum">
+            <number>10</number>
+           </property>
+           <property name="maximum">
+            <number>64</number>
+           </property>
+           <property name="value">
+            <number>28</number>
+           </property>
+          </widget>
          </item>
-         <item>
-          <property name="text">
-           <string comment="@item:inlistbox Button size:">Medium</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string comment="@item:inlistbox Button size:">Large</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string comment="@item:inlistbox Button size:">Very Large</string>
-          </property>
-         </item>
-        </widget>
+        </layout>
        </item>
        <item row="6" column="1" alignment="Qt::AlignLeft">
         <widget class="QLabel" name="label_14">
@@ -977,7 +984,8 @@
     <tabstop>iconIncludedInAlignment</tabstop>
     <tabstop>dimAppName</tabstop>
     <tabstop>appNameOpacity</tabstop>
-    <tabstop>buttonSize</tabstop>
+    <tabstop>buttonSizeSlider</tabstop>
+    <tabstop>buttonSizeSpinBox</tabstop>
    <tabstop>buttonStyle</tabstop>
    <tabstop>buttonSpacing</tabstop>
   <tabstop>buttonPadding</tabstop>

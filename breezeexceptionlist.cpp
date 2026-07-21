@@ -45,6 +45,8 @@ namespace Breeze
 
             // reset group
             readConfig( &exception, config.data(), groupName );
+            const KConfigGroup exceptionGroup(config, groupName);
+            exception.setButtonSize(ButtonSizing::fromConfigValue(exceptionGroup.readEntry(QStringLiteral("ButtonSize"), QString()), exception.buttonSize()));
 
             // create new configuration
             InternalSettingsPtr configuration( new InternalSettings() );

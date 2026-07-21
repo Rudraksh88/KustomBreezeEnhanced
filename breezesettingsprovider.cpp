@@ -22,6 +22,8 @@
 
 #include "breezeexceptionlist.h"
 
+#include <KConfigGroup>
+
 #include <QRegularExpression>
 #include <QTextStream>
 
@@ -59,6 +61,9 @@ namespace Breeze
         }
 
         m_defaultSettings->load();
+        const KConfigGroup windecoGroup(m_config, QStringLiteral("Windeco"));
+        m_defaultSettings->setButtonSize(ButtonSizing::fromConfigValue(windecoGroup.readEntry(QStringLiteral("ButtonSize"), QString()),
+                                                                       m_defaultSettings->buttonSize()));
 
         ExceptionList exceptions;
         exceptions.readConfig( m_config );

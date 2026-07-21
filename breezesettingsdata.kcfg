@@ -124,16 +124,11 @@
       <max>100</max>
     </entry>
 
-    <!-- button size -->
-    <entry name="ButtonSize" type="Enum">
-      <choices>
-          <choice name="ButtonTiny" />
-          <choice name="ButtonSmall" />
-          <choice name="ButtonDefault" />
-          <choice name="ButtonLarge" />
-          <choice name="ButtonVeryLarge" />
-      </choices>
-      <default>ButtonDefault</default>
+    <!-- button size (logical pixels) -->
+    <entry name="ButtonSize" type="Int">
+      <default>28</default>
+      <min>10</min>
+      <max>64</max>
     </entry>
 
     <!-- button style -->

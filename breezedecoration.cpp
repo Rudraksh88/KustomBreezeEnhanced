@@ -1200,20 +1200,7 @@ void Decoration::paintTitleBar(QPainter *painter, const QRectF &repaintRegion)
 //________________________________________________________________
 int Decoration::buttonHeight() const
 {
-    const double baseSize = settings()->gridUnit();
-    switch (m_internalSettings->buttonSize()) {
-    case InternalSettings::ButtonTiny:
-        return baseSize;
-    case InternalSettings::ButtonSmall:
-        return baseSize * 1.4;
-    default:
-    case InternalSettings::ButtonDefault:
-        return baseSize * 1.6;
-    case InternalSettings::ButtonLarge:
-        return baseSize * 2;
-    case InternalSettings::ButtonVeryLarge:
-        return baseSize * 2.5;
-    }
+    return m_internalSettings->buttonSize();
 }
 
 //________________________________________________________________
@@ -1231,9 +1218,10 @@ int Decoration::captionHeight() const
 //________________________________________________________________
 int Decoration::titleBarIconSize() const
 {
-    // Icon size based on caption height, controlled by setting (percentage)
+    // Keep icon sizing independent of button size and titlebar padding. The
+    // percentage remains relative to the original default caption height.
     const int sizePercent = m_internalSettings->titleBarIconSize();
-    return qRound(captionHeight() * sizePercent / 100.0);
+    return qRound(TitleBarIconSizing::ReferenceHeight * sizePercent / 100.0);
 }
 
 //________________________________________________________________
