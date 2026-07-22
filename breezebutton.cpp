@@ -147,13 +147,24 @@ namespace Breeze
         }
         connect(decoration->settings().get(), &KDecoration3::DecorationSettings::reconfigured, this, &Button::reconfigure);
         connect( this, &KDecoration3::DecorationButton::hoveredChanged, this, &Button::updateAnimationState );
+        const auto updateTitleBar = [decoration]() {
+            decoration->update(decoration->titleBar());
+        };
+        connect(this, &KDecoration3::DecorationButton::hoveredChanged, this, updateTitleBar);
+        connect(this, &KDecoration3::DecorationButton::pressedChanged, this, updateTitleBar);
+        connect(this, &KDecoration3::DecorationButton::checkedChanged, this, updateTitleBar);
+        connect(this, &KDecoration3::DecorationButton::enabledChanged, this, updateTitleBar);
 
         if (decoration->objectName() == "applet-window-buttons") {
             connect( this, &Button::hoveredChanged, [=](bool hovered){
                     decoration->setButtonHovered(hovered);
                     });
         }
-        connect(decoration, SIGNAL(buttonHoveredChanged()), this, SLOT(update()));
+        connect(decoration, &Decoration::buttonHoveredChanged, this, [this, decoration]() {
+            if (decoration->internalSettings()->unisonHovering())
+                setAnimationHovered(decoration->buttonHovered());
+            decoration->update(decoration->titleBar());
+        });
 
         reconfigure();
 
@@ -260,6 +271,17 @@ namespace Breeze
         }
 
         painter->restore();
+    }
+
+    //__________________________________________________________________
+    void Button::setOpacity(qreal value)
+    {
+        if (m_opacity == value)
+            return;
+
+        m_opacity = value;
+        if (decoration())
+            decoration()->update(decoration()->titleBar());
     }
 
     //__________________________________________________________________
@@ -812,9 +834,9 @@ namespace Breeze
         QPen trafficLightGlyphPen(symbol_pen);
         trafficLightGlyphPen.setColor(trafficLightGlyphColor);
 
-        const qreal hoverProgress = animationsEnabled
+        const qreal hoverProgress = isEnabled() && animationsEnabled
             ? m_animation->currentValue().toReal()
-            : (this->hovered() ? 1.0 : 0.0);
+            : (isEnabled() && this->hovered() ? 1.0 : 0.0);
         const bool showHoverGlyph = hoverProgress > 0.0;
 
         const auto beginGlyphPainting = [painter](qreal opacity) {
@@ -4720,7 +4742,19 @@ namespace Breeze
     {
 
         auto d = qobject_cast<Decoration*>(decoration());
-        if( !d || !d->internalSettings()->animationsEnabled() || (d->internalSettings()->buttonStyle() == 1) ) return;
+        if (!d || d->internalSettings()->unisonHovering())
+            return;
+
+        setAnimationHovered(hovered);
+
+    }
+
+    //__________________________________________________________________
+    void Button::setAnimationHovered(bool hovered)
+    {
+
+        auto d = qobject_cast<Decoration*>(decoration());
+        if( !d || !isEnabled() || !d->internalSettings()->animationsEnabled() || (d->internalSettings()->buttonStyle() == 1) ) return;
 
         QAbstractAnimation::Direction dir = hovered ? QAbstractAnimation::Forward : QAbstractAnimation::Backward;
         if( m_animation->state() == QAbstractAnimation::Running && m_animation->direction() != dir )

@@ -129,6 +129,7 @@ public Q_SLOTS:
 
 protected:
     void hoverMoveEvent(QHoverEvent *event) override;
+    void hoverLeaveEvent(QHoverEvent *event) override;
     //@}
 
 public Q_SLOTS:

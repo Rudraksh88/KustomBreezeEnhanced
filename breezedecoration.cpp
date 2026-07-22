@@ -449,6 +449,13 @@ void Decoration::hoverMoveEvent(QHoverEvent *event)
 }
 
 //________________________________________________________________
+void Decoration::hoverLeaveEvent(QHoverEvent *event)
+{
+    setButtonHovered(false);
+    KDecoration3::Decoration::hoverLeaveEvent(event);
+}
+
+//________________________________________________________________
 bool Decoration::init()
 {
     auto c = window();
@@ -499,6 +506,10 @@ bool Decoration::init()
     connect(c, &KDecoration3::DecoratedWindow::activeChanged, this, &Decoration::updateAnimationState);
     connect(c, &KDecoration3::DecoratedWindow::activeChanged, this, &Decoration::createShadow);
     connect(c, &KDecoration3::DecoratedWindow::activeChanged, this, &Decoration::updateBlur);
+    connect(c, &KDecoration3::DecoratedWindow::activeChanged, this, [this]() {
+        if (!window()->isActive())
+            setButtonHovered(false);
+    });
     connect(c, &KDecoration3::DecoratedWindow::widthChanged, this, &Decoration::updateTitleBar);
     connect(c, &KDecoration3::DecoratedWindow::maximizedChanged, this, &Decoration::updateTitleBar);
     // connect(c, &KDecoration3::DecoratedWindow::maximizedChanged, this, &Decoration::setOpaque);
@@ -839,8 +850,13 @@ void Decoration::updateButtonsGeometry()
     const int iconSize = buttonHeight();
     const int topPadding = s->smallSpacing() * Metrics::TitleBar_TopMargin;
     const int iconTop = qMax(0, topPadding + (captionHeight() - iconSize) / 2);
-    const qreal iconOffsetY = isTopEdge() ? iconTop : 0;
-    const qreal hitHeight = iconOffsetY + iconSize;
+    const qreal edgeTopPadding = isTopEdge() ? iconTop : 0;
+    // KWin 6.7 rasterizes full-decoration and clipped button repaints on
+    // opposite sides of a device pixel at fractional scale. Keep maximized
+    // traffic lights on the visually correct (post-hover) pixel.
+    const qreal devicePixel = 1.0 / qMax<qreal>(1.0, window()->scale());
+    const qreal iconOffsetY = qMax<qreal>(0.0, edgeTopPadding - (isMaximized() ? devicePixel : 0.0));
+    const qreal hitHeight = edgeTopPadding + iconSize;
     const qreal groupTop = isTopEdge() ? 0 : iconTop;
     const qreal spacing = 0.5 * s->smallSpacing() * m_internalSettings->buttonSpacing();
     const qreal horizontalMargin = 0.5 * s->smallSpacing()

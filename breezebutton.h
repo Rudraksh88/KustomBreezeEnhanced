@@ -76,12 +76,7 @@ namespace Breeze
 
         //*@name active state change animation
         //@{
-        void setOpacity( qreal value )
-        {
-            if( m_opacity == value ) return;
-            m_opacity = value;
-            update();
-        }
+        void setOpacity(qreal value);
 
         qreal opacity() const
         { return m_opacity; }
@@ -100,6 +95,9 @@ namespace Breeze
 
         //* private constructor
         explicit Button(KDecoration3::DecorationButtonType type, Decoration *decoration, QObject *parent = nullptr);
+
+        //* drive the hover animation from the selected hover source
+        void setAnimationHovered(bool hovered);
 
         //* draw button icon
         void paintButton( QPainter * );
@@ -151,6 +149,7 @@ namespace Breeze
 
         //* active state change opacity
         qreal m_opacity = 0;
+
     };
 
 } // namespace
