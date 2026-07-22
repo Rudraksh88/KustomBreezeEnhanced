@@ -846,11 +846,8 @@ namespace Breeze
                   button_color = QColor(100, 100, 100);
                 else
                   button_color = QColor(200, 200, 200);
-                QPen button_pen( qGray(titleBarColor.rgb()) < 69 ? button_color.lighter(115) : button_color.darker(115) );
-                button_pen.setJoinStyle( Qt::MiterJoin );
-                button_pen.setWidthF( PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
                 painter->setBrush( button_color );
-                painter->setPen( button_pen );
+                painter->setPen( Qt::NoPen );
 
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
@@ -883,11 +880,8 @@ namespace Breeze
                   button_color = QColor(100, 100, 100);
                 else
                   button_color = QColor(200, 200, 200);
-                QPen button_pen( qGray(titleBarColor.rgb()) < 69 ? button_color.lighter(115) : button_color.darker(115) );
-                button_pen.setJoinStyle( Qt::MiterJoin );
-                button_pen.setWidthF( PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
                 painter->setBrush( button_color );
-                painter->setPen( button_pen );
+                painter->setPen( Qt::NoPen );
 
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
@@ -939,11 +933,8 @@ namespace Breeze
                   button_color = QColor(100, 100, 100);
                 else
                   button_color = QColor(200, 200, 200);
-                QPen button_pen( qGray(titleBarColor.rgb()) < 69 ? button_color.lighter(115) : button_color.darker(115) );
-                button_pen.setJoinStyle( Qt::MiterJoin );
-                button_pen.setWidthF( PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
                 painter->setBrush( button_color );
-                painter->setPen( button_pen );
+                painter->setPen( Qt::NoPen );
 
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
@@ -968,11 +959,8 @@ namespace Breeze
                   button_color = QColor(100, 100, 100);
                 else
                   button_color = QColor(200, 200, 200);
-                QPen button_pen( qGray(titleBarColor.rgb()) < 69 ? button_color.lighter(115) : button_color.darker(115) );
-                button_pen.setJoinStyle( Qt::MiterJoin );
-                button_pen.setWidthF( PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
                 painter->setBrush( button_color );
-                painter->setPen( button_pen );
+                painter->setPen( Qt::NoPen );
 
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
@@ -999,11 +987,8 @@ namespace Breeze
                   button_color = QColor(100, 100, 100);
                 else
                   button_color = QColor(200, 200, 200);
-                QPen button_pen( qGray(titleBarColor.rgb()) < 69 ? button_color.lighter(115) : button_color.darker(115) );
-                button_pen.setJoinStyle( Qt::MiterJoin );
-                button_pen.setWidthF( PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
                 painter->setBrush( button_color );
-                painter->setPen( button_pen );
+                painter->setPen( Qt::NoPen );
 
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
@@ -1049,11 +1034,8 @@ namespace Breeze
                   button_color = QColor(100, 100, 100);
                 else
                   button_color = QColor(200, 200, 200);
-                QPen button_pen( qGray(titleBarColor.rgb()) < 69 ? button_color.lighter(115) : button_color.darker(115) );
-                button_pen.setJoinStyle( Qt::MiterJoin );
-                button_pen.setWidthF( PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
                 painter->setBrush( button_color );
-                painter->setPen( button_pen );
+                painter->setPen( Qt::NoPen );
 
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
@@ -1100,11 +1082,8 @@ namespace Breeze
 
                 // else
                 //   button_color = QColor(200, 200, 200);
-                QPen button_pen( qGray(titleBarColor.rgb()) < 69 ? button_color.lighter(115) : button_color.darker(115) );
-                button_pen.setJoinStyle( Qt::MiterJoin );
-                button_pen.setWidthF( PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
                 painter->setBrush( button_color );
-                painter->setPen( button_pen );
+                painter->setPen( Qt::NoPen );
 
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
@@ -1170,11 +1149,8 @@ namespace Breeze
                   button_color = QColor(100, 100, 100);
                 else
                   button_color = QColor(200, 200, 200);
-                QPen button_pen( qGray(titleBarColor.rgb()) < 69 ? button_color.lighter(115) : button_color.darker(115) );
-                button_pen.setJoinStyle( Qt::MiterJoin );
-                button_pen.setWidthF( PenWidth::Symbol*qMax((qreal)1.0, 20/width ) );
                 painter->setBrush( button_color );
-                painter->setPen( button_pen );
+                painter->setPen( Qt::NoPen );
 
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
