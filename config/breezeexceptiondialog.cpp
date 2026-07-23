@@ -58,7 +58,7 @@ namespace Breeze
         connect(m_ui.buttonSizeSlider, &QSlider::valueChanged, m_ui.buttonSizeSpinBox, &QSpinBox::setValue);
         connect(m_ui.buttonSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), m_ui.buttonSizeSlider, &QSlider::setValue);
         connect(m_ui.buttonSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &ExceptionDialog::updateChanged);
-        connect( m_ui.buttonSpacingSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this](int){updateChanged();} );
+        connect(m_ui.buttonSpacingSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), [this](double) { updateChanged(); });
         connect( m_ui.buttonPaddingSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this](int){updateChanged();} );
         connect( m_ui.hOffsetSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this](int){updateChanged();} );
         connect( m_ui.titleBarIconSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this](int){updateChanged();} );

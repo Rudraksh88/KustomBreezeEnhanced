@@ -154,8 +154,8 @@
       <default>macDarkAurorae</default>
     </entry>
 
-    <entry name="ButtonSpacing" type = "Int">
-        <default>2</default>
+    <entry name="ButtonSpacing" type = "Double">
+        <default>2.0</default>
     </entry>
 
     <entry name="ButtonPadding" type = "Int">

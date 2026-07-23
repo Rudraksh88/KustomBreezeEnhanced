@@ -56,7 +56,7 @@ ConfigWidget::ConfigWidget(QObject *parent, const KPluginMetaData &data, const Q
     connect(m_ui.buttonSizeSlider, &QSlider::valueChanged, m_ui.buttonSizeSpinBox, &QSpinBox::setValue);
     connect(m_ui.buttonSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), m_ui.buttonSizeSlider, &QSlider::setValue);
     connect(m_ui.buttonSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &ConfigWidget::updateChanged);
-    connect(m_ui.buttonSpacing, QOverload<int>::of(&QSpinBox::valueChanged), [this](int /*i*/) {
+    connect(m_ui.buttonSpacing, QOverload<double>::of(&QDoubleSpinBox::valueChanged), [this](double /*value*/) {
         updateChanged();
     });
     connect(m_ui.buttonPadding, SIGNAL(valueChanged(int)), SLOT(updateChanged()));
