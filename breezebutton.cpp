@@ -1084,19 +1084,19 @@ namespace Breeze
             {
                 QColor button_color;
                 if ( !inactiveWindow ) {
-                  if ( !isChecked() && !this->hovered() )
+                  if ( !d->internalSettings()->alwaysShowOnTopButton() && !isChecked() && !this->hovered() )
                     button_color = QColor(0, 0, 0, 0);
                   else
                   button_color = QColor(135, 206, 249);
                 }
                 else if ( qGray(titleBarColor.rgb()) < 128 ) {
-                  if ( !isChecked() && !this->hovered() )
+                  if ( !d->internalSettings()->alwaysShowOnTopButton() && !isChecked() && !this->hovered() )
                     button_color = QColor(0, 0, 0, 0);
                   else
                   button_color = QColor(100, 100, 100);
                 }
                 else {
-                  if ( !isChecked() && !this->hovered() )
+                  if ( !d->internalSettings()->alwaysShowOnTopButton() && !isChecked() && !this->hovered() )
                     button_color = QColor(0, 0, 0, 0);
                 else
                   button_color = QColor(200, 200, 200);
@@ -1230,8 +1230,12 @@ namespace Breeze
         const qreal outerCircleRadius = this->buttonRadius();
         const QPointF circleCenter(static_cast<qreal>(9), static_cast<qreal>(9));
 
-        // Draw button ellipse for all types except KeepAbove when not hovered or checked
-        if (type() != DecorationButtonType::KeepAbove || this->hovered() || isChecked())
+        // Keep the legacy hidden-until-hover behavior unless the user opts
+        // into treating KeepAbove like the other traffic-light buttons.
+        if (type() != DecorationButtonType::KeepAbove
+            || d->internalSettings()->alwaysShowOnTopButton()
+            || this->hovered()
+            || isChecked())
         {
             painter->setBrush( ellipseColor );
             painter->setPen( button_pen );

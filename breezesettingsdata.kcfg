@@ -196,6 +196,11 @@
       <default>true</default>
     </entry>
 
+    <!-- keep the On Top button background visible outside hover -->
+    <entry name="AlwaysShowOnTopButton" type = "Bool">
+      <default>false</default>
+    </entry>
+
     <!-- maximized windows -->
     <entry name="DrawBorderOnMaximizedWindows" type = "Bool">
       <default>false</default>

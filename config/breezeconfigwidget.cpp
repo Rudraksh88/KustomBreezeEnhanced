@@ -62,6 +62,7 @@ ConfigWidget::ConfigWidget(QObject *parent, const KPluginMetaData &data, const Q
     connect(m_ui.buttonPadding, SIGNAL(valueChanged(int)), SLOT(updateChanged()));
     connect(m_ui.hOffset, SIGNAL(valueChanged(int)), SLOT(updateChanged()));
     connect(m_ui.unisonHovering, &QAbstractButton::clicked, this, &ConfigWidget::updateChanged);
+    connect(m_ui.alwaysShowOnTopButton, &QAbstractButton::clicked, this, &ConfigWidget::updateChanged);
     connect(m_ui.cornerRadiusSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this](int /*i*/) {
         updateChanged();
     });
@@ -122,6 +123,7 @@ void ConfigWidget::load()
     m_ui.buttonPadding->setValue(m_internalSettings->buttonPadding());
     m_ui.hOffset->setValue(m_internalSettings->hOffset());
     m_ui.unisonHovering->setChecked(m_internalSettings->unisonHovering());
+    m_ui.alwaysShowOnTopButton->setChecked(m_internalSettings->alwaysShowOnTopButton());
     m_ui.cornerRadiusSpinBox->setValue(m_internalSettings->cornerRadius());
     m_ui.drawBorderOnMaximizedWindows->setChecked(m_internalSettings->drawBorderOnMaximizedWindows());
     m_ui.drawSizeGrip->setChecked(m_internalSettings->drawSizeGrip());
@@ -182,6 +184,7 @@ void ConfigWidget::save()
     m_internalSettings->setButtonPadding(m_ui.buttonPadding->value());
     m_internalSettings->setHOffset(m_ui.hOffset->value());
     m_internalSettings->setUnisonHovering(m_ui.unisonHovering->isChecked());
+    m_internalSettings->setAlwaysShowOnTopButton(m_ui.alwaysShowOnTopButton->isChecked());
     m_internalSettings->setCornerRadius(m_ui.cornerRadiusSpinBox->value());
     m_internalSettings->setDrawBorderOnMaximizedWindows(m_ui.drawBorderOnMaximizedWindows->isChecked());
     m_internalSettings->setDrawSizeGrip(m_ui.drawSizeGrip->isChecked());
@@ -252,6 +255,7 @@ void ConfigWidget::defaults()
     m_ui.buttonPadding->setValue(m_internalSettings->buttonPadding());
     m_ui.hOffset->setValue(m_internalSettings->hOffset());
     m_ui.unisonHovering->setChecked(m_internalSettings->unisonHovering());
+    m_ui.alwaysShowOnTopButton->setChecked(m_internalSettings->alwaysShowOnTopButton());
     m_ui.cornerRadiusSpinBox->setValue(m_internalSettings->cornerRadius());
     m_ui.drawBorderOnMaximizedWindows->setChecked(m_internalSettings->drawBorderOnMaximizedWindows());
     m_ui.drawSizeGrip->setChecked(m_internalSettings->drawSizeGrip());
@@ -313,6 +317,8 @@ void ConfigWidget::updateChanged()
     else if (m_ui.hOffset->value() != m_internalSettings->hOffset())
         modified = true;
     else if (m_ui.unisonHovering->isChecked() != m_internalSettings->unisonHovering())
+        modified = true;
+    else if (m_ui.alwaysShowOnTopButton->isChecked() != m_internalSettings->alwaysShowOnTopButton())
         modified = true;
     else if (m_ui.cornerRadiusSpinBox->value() != m_internalSettings->cornerRadius())
         modified = true;
