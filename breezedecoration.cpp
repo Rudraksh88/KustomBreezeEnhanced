@@ -44,6 +44,7 @@
 #include <KSharedConfig>
 
 #include <QGuiApplication>
+#include <QImage>
 #include <QPainter>
 #include <QTextStream>
 #include <QTimer>
@@ -1026,6 +1027,117 @@ void Decoration::paint(QPainter *painter, const QRectF &repaintRegion)
 }
 
 //________________________________________________________________
+/* The muted half of a title is drawn the way macOS draws a label over a frosted
+   surface, instead of by simply making it transparent. Transparency drains the
+   color out of a text and leaves it grey; this adds light to the titlebar
+   instead.
+
+   The glyphs go into a premultiplied layer whose color channels are then pushed
+   *past* their own alpha. Such a pixel -- channels above the alpha beside them
+   -- isn't a legal color, but it is a legal premultiplied value, and an
+   ordinary source-over of it adds its light while hiding almost nothing of what
+   is behind, so a blurred titlebar shows through the letterforms and the text
+   keeps its hue. Nothing underneath has to be read for that, which matters
+   because the blur belongs to the compositor.
+
+   The numbers are the brightness and contrast of QtQuick's MultiEffect, the
+   recipe this look comes from; the app-name opacity from the settings scales
+   what the layer is finally worth. */
+static void drawVibrantText(QPainter *painter, int x, int baseline,
+                            const QString &text, const QColor &color, qreal opacity)
+{
+    if (text.isEmpty() || !color.isValid() || opacity <= 0.0 || color.alphaF() <= 0.0)
+        return;
+
+    /* the brightness of the recipe, raised so that the text carries about a
+       tenth more light than the dock's 8.8 gives it */
+    constexpr qreal brightness = 10.13;
+    constexpr qreal contrast = 7.0;
+    constexpr int layerAlpha = 8; // of 255, what an opaque glyph ends up at
+
+    const QFontMetrics fm(painter->font());
+    constexpr qreal pad = 2.0; // room for whatever antialiasing hangs over the box
+    const QSizeF boxSize(fm.horizontalAdvance(text) + 2 * pad, fm.height() + 2 * pad);
+    if (boxSize.isEmpty())
+        return;
+
+    /* A decoration is painted in logical coordinates that the compositor
+       scales, and that scale can be a fraction. The layer must therefore be
+       rasterized at the scale the painter really draws at: rasterizing it at
+       one and leaving the painter to magnify it resamples the glyphs, which
+       makes them soft and lets them swim by a fraction of a pixel as the window
+       moves. Its origin is put on the device pixel grid for the same reason,
+       as the geometry of everything else here is. */
+    qreal pixelScale = painter->deviceTransform().m11();
+    if (!(pixelScale > 0.0))
+        pixelScale = 1.0;
+    const QPointF origin = KDecoration3::snapToPixelGrid(
+        QPointF(x - pad, baseline - fm.ascent() - pad), pixelScale);
+
+    QImage layer(static_cast<int>(boxSize.width() * pixelScale + 0.999),
+                 static_cast<int>(boxSize.height() * pixelScale + 0.999),
+                 QImage::Format_ARGB32_Premultiplied);
+    if (layer.isNull())
+        return;
+    layer.setDevicePixelRatio(pixelScale);
+    layer.fill(Qt::transparent);
+    {
+        QPainter p(&layer);
+        p.setFont(painter->font());
+        p.setRenderHint(QPainter::TextAntialiasing,
+                        painter->testRenderHint(QPainter::TextAntialiasing));
+        /* laid down opaque, so that the layer holds the coverage of the
+           antialiasing at its full precision -- drawing at the small alpha
+           above would quantize that coverage into as many steps as it has
+           units, and the push below would then magnify each of them */
+        QColor pen(color);
+        pen.setAlpha(255);
+        p.setPen(pen);
+        p.drawText(QPointF(x - origin.x(), baseline - origin.y()), text);
+    }
+
+    /* the MultiEffect stage, per channel: for a premultiplied value of c*a,
+       rgb = (rgb - 0.5a)(1 + contrast) + 0.5a + brightness*a leaves a factor
+       that depends on the color alone */
+    const auto factor = [](qreal c) {
+        return (c - 0.5) * (1.0 + contrast) + 0.5 + brightness;
+    };
+    const qreal fr = factor(color.redF());
+    const qreal fg = factor(color.greenF());
+    const qreal fb = factor(color.blueF());
+    const qreal alphaScale = layerAlpha / 255.0 * color.alphaF() * opacity;
+
+    for (int y = 0; y < layer.height(); ++y) {
+        QRgb *line = reinterpret_cast<QRgb *>(layer.scanLine(y));
+        for (int i = 0; i < layer.width(); ++i) {
+            const int coverage = qAlpha(line[i]);
+            if (coverage == 0)
+                continue;
+            /* the alpha this pixel ends at, kept unrounded: it is a very small
+               number and the factors multiply it by more than ten, so rounding
+               it first would magnify half a unit of it into fourteen units of
+               brightness and the opacity would move in jumps */
+            const qreal a = coverage * alphaScale;
+            line[i] = qRgba(qBound(0, qRound(a * fr), 255),
+                            qBound(0, qRound(a * fg), 255),
+                            qBound(0, qRound(a * fb), 255),
+                            qBound(0, qRound(a), 255));
+        }
+    }
+
+    painter->save();
+    /* Plus rather than the default: the raster engine adds a premultiplied
+       source to its destination with a packed add, trusting that no channel
+       passes its own alpha -- which is exactly what this layer does on purpose,
+       so a source-over would overflow a channel into the next one over a light
+       titlebar and the text would come out dark. Plus saturates instead, and is
+       the operation that is meant here. */
+    painter->setCompositionMode(QPainter::CompositionMode_Plus);
+    painter->drawImage(origin, layer);
+    painter->restore();
+}
+
+//________________________________________________________________
 void Decoration::paintTitleBar(QPainter *painter, const QRectF &repaintRegion)
 {
     // Extend titleRect by 1 pixel at the bottom to prevent anti-aliasing gaps
@@ -1209,14 +1321,9 @@ void Decoration::paintTitleBar(QPainter *painter, const QRectF &repaintRegion)
                 // Calculate position for app part
                 const int documentWidth = painter->fontMetrics().horizontalAdvance(documentPart);
 
-                // Draw app part with reduced opacity
-                QColor dimmedColor = fontColor();
-                dimmedColor.setAlphaF(dimmedColor.alphaF() * m_internalSettings->appNameOpacity() / 100.0);
-                painter->setPen(dimmedColor);
-                painter->drawText(textX + documentWidth, textY, appPart);
-
-                // Restore original pen color
-                painter->setPen(fontColor());
+                // Draw app part as a muted, vibrant text (see drawVibrantText)
+                drawVibrantText(painter, textX + documentWidth, textY, appPart,
+                                fontColor(), m_internalSettings->appNameOpacity() / 100.0);
             } else {
                 painter->drawText(textX, textY, caption);
             }
@@ -1244,14 +1351,9 @@ void Decoration::paintTitleBar(QPainter *painter, const QRectF &repaintRegion)
                 // Calculate position for app part
                 const int documentWidth = painter->fontMetrics().horizontalAdvance(documentPart);
 
-                // Draw app part with reduced opacity
-                QColor dimmedColor = fontColor();
-                dimmedColor.setAlphaF(dimmedColor.alphaF() * m_internalSettings->appNameOpacity() / 100.0);
-                painter->setPen(dimmedColor);
-                painter->drawText(drawX + documentWidth, textY, appPart);
-
-                // Restore original pen color
-                painter->setPen(fontColor());
+                // Draw app part as a muted, vibrant text (see drawVibrantText)
+                drawVibrantText(painter, drawX + documentWidth, textY, appPart,
+                                fontColor(), m_internalSettings->appNameOpacity() / 100.0);
             } else {
                 painter->drawText(cR.first, cR.second | Qt::TextSingleLine, caption);
             }

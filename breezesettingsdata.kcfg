@@ -117,7 +117,10 @@
       <default>true</default>
     </entry>
 
-    <!-- app name opacity (percentage, 100 = same as title, 0 = invisible) -->
+    <!-- app name opacity (percentage, 0 = invisible). The app name is drawn as
+         a vibrant text that adds light to the titlebar instead of covering it
+         (see drawVibrantText), so this scales how much light it adds; even at
+         100 it stays quieter than the title beside it. -->
     <entry name="AppNameOpacity" type = "Int">
       <default>50</default>
       <min>0</min>
