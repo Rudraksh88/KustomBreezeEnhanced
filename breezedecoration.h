@@ -68,7 +68,7 @@ public:
     }
 
     //* caption height
-    int captionHeight() const;
+    qreal captionHeight() const;
 
     //* full titlebar strip, in decoration coordinates
     /** Unlike titleBar(), which is the drag/interaction area and is inset from
@@ -226,7 +226,7 @@ private:
     QVector<std::shared_ptr<KDecoration3::DecorationShadow>> m_shadowTransitionCache;
 
     //* Rectangular area of titlebar without clipped corners
-    QRect m_titleRect;
+    QRectF m_titleRect;
 
     //* Exact titlebar path, with clipped rounded corners
     std::shared_ptr<QPainterPath> m_titleBarPath = std::make_shared<QPainterPath>();

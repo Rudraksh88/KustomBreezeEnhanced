@@ -548,11 +548,17 @@ void Decoration::updateTitleBar()
     auto s = settings();
     auto c = window();
     const bool maximized = isMaximized();
-    const int width = maximized ? c->width() : c->width() - 2 * s->largeSpacing() * Metrics::TitleBar_SideMargin;
-    const int height = maximized ? borderTop() : borderTop() - s->smallSpacing() * Metrics::TitleBar_TopMargin;
-    const int x = maximized ? 0 : s->largeSpacing() * Metrics::TitleBar_SideMargin;
-    const int y = maximized ? 0 : s->smallSpacing() * Metrics::TitleBar_TopMargin;
-    setTitleBar(QRect(x, y, width, height));
+    /* Borders are snapped to the device pixel grid, which on a fractional scale
+       makes them fractional in logical pixels (a top of 37 becomes 37.333 at
+       1.5). Truncating that back to an int here would draw and shape the
+       titlebar shorter than the border reserved for it, which leaves a seam
+       under it, and would keep the layout from ever agreeing with the borders
+       it was computed from -- so the contents would never settle. */
+    const qreal width = maximized ? c->width() : c->width() - 2 * s->largeSpacing() * Metrics::TitleBar_SideMargin;
+    const qreal height = maximized ? borderTop() : borderTop() - s->smallSpacing() * Metrics::TitleBar_TopMargin;
+    const qreal x = maximized ? 0 : s->largeSpacing() * Metrics::TitleBar_SideMargin;
+    const qreal y = maximized ? 0 : s->smallSpacing() * Metrics::TitleBar_TopMargin;
+    setTitleBar(QRectF(x, y, width, height));
 }
 
 //________________________________________________________________
@@ -836,7 +842,7 @@ void Decoration::calculateWindowAndTitleBarShapes(const bool windowShapeOnly)
 
     if (!windowShapeOnly || c->isShaded()) {
         // set titleBar geometry and path
-        m_titleRect = QRect(QPoint(0, 0), QSize(size().width(), borderTop()));
+        m_titleRect = QRectF(QPointF(0, 0), QSizeF(size().width(), borderTop()));
         m_titleBarPath->clear(); // clear the path for subsequent calls to this function
         if (isMaximized() || !s->isAlphaChannelSupported()) {
             m_titleBarPath->addRect(m_titleRect);
@@ -895,7 +901,7 @@ void Decoration::updateButtonsGeometry()
     const qreal pixelScale = scale();
     const int iconSize = buttonHeight();
     const int topPadding = s->smallSpacing() * Metrics::TitleBar_TopMargin;
-    const int iconTop = qMax(0, topPadding + (captionHeight() - iconSize) / 2);
+    const int iconTop = qMax(0, topPadding + qRound((captionHeight() - iconSize) / 2.0));
     const qreal edgeTopPadding = isTopEdge() ? iconTop : 0;
     // Glyphs are drawn from this offset, so keep it on the device pixel grid.
     // Otherwise the same button rasterizes differently depending on how the
@@ -985,7 +991,7 @@ void Decoration::paint(QPainter *painter, const QRectF &repaintRegion)
 
         // clip away the top part
         if (!hideTitleBar())
-            painter->setClipRect(0, borderTop(), size().width(), size().height() - borderTop(), Qt::IntersectClip);
+            painter->setClipRect(QRectF(0, borderTop(), size().width(), size().height() - borderTop()), Qt::IntersectClip);
 
         // When no borders set, outline will be drawn by shader
         QPen border_pen1;
@@ -1368,9 +1374,9 @@ int Decoration::buttonHeight() const
 }
 
 //________________________________________________________________
-int Decoration::captionHeight() const
+qreal Decoration::captionHeight() const
 {
-    int border = borderTop();
+    qreal border = borderTop();
     // set border a minimum value if it is 0,
     // to avoid buttons being overflowed
     if (border < settings()->smallSpacing() * (Metrics::TitleBar_BottomMargin + Metrics::TitleBar_TopMargin)) {
@@ -1407,7 +1413,9 @@ QPair<QRect, Qt::Alignment> Decoration::captionRect() const
                 + Metrics::TitleBar_SideMargin * settings()->smallSpacing() + 0.5 * s->smallSpacing() * m_internalSettings->buttonPadding();
 
         const int yOffset = settings()->smallSpacing() * Metrics::TitleBar_TopMargin;
-        const QRect maxRect(leftOffset, yOffset, size().width() - leftOffset - rightOffset, captionHeight());
+        const QRect maxRect(leftOffset, yOffset,
+                            qRound(size().width()) - leftOffset - rightOffset,
+                            qRound(captionHeight()));
 
         // Calculate icon width contribution for bounding rect calculations
         const int iconSize = titleBarIconSize();
@@ -1429,14 +1437,14 @@ QPair<QRect, Qt::Alignment> Decoration::captionRect() const
         default:
         case InternalSettings::AlignCenterFullWidth: {
             // full caption rect - used when content can be centered without overlapping buttons
-            const QRect fullRect = QRect(0, yOffset, size().width(), captionHeight());
+            const QRect fullRect = QRect(0, yOffset, qRound(size().width()), qRound(captionHeight()));
             QRect boundingRect(settings()->fontMetrics().boundingRect(c->caption()).toRect());
 
             // text bounding rect - include icon width if icon is shown and included in alignment
             const int totalContentWidth = boundingRect.width() + iconTotalWidth;
             boundingRect.setWidth(totalContentWidth);
             boundingRect.setTop(yOffset);
-            boundingRect.setHeight(captionHeight());
+            boundingRect.setHeight(qRound(captionHeight()));
             boundingRect.moveLeft((size().width() - totalContentWidth) / 2);
 
             // Check if centered content would overlap with buttons
