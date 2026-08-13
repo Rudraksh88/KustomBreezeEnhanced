@@ -70,6 +70,20 @@ public:
     //* caption height
     int captionHeight() const;
 
+    //* full titlebar strip, in decoration coordinates
+    /** Unlike titleBar(), which is the drag/interaction area and is inset from
+     * the decoration edges, this covers every pixel the titlebar paints -
+     * including the button groups, which sit outside titleBar() on both sides.
+     * Use it as the repaint region whenever button or caption state changes.
+     */
+    QRectF titleBarStrip() const
+    {
+        // Standalone (applet) decorations carry no borders, so fall back to the
+        // whole decoration rather than returning an empty repaint region.
+        const QRectF strip(0, 0, size().width(), borderTop());
+        return strip.isEmpty() ? rect() : strip;
+    }
+
     //* titlebar icon size (for icon displayed next to title)
     int titleBarIconSize() const;
 
@@ -157,6 +171,14 @@ private:
     void updateInactiveShadow();
     void rebuildShadowCache();
     void calculateWindowAndTitleBarShapes(const bool windowShapeOnly = false);
+
+    //*@name device pixel grid
+    //@{
+    //* scale the decoration is currently rendered at
+    qreal scale() const;
+    //* scale the next decoration state will be rendered at
+    qreal nextScale() const;
+    //@}
 
     //*@name border size
     //@{

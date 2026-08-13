@@ -36,6 +36,7 @@
 #include <KDecoration3/DecorationButtonGroup>
 #include <KDecoration3/DecorationSettings>
 #include <KDecoration3/DecorationShadow>
+#include <KDecoration3/ScaleHelpers>
 
 #include <KColorUtils>
 #include <KConfigGroup>
@@ -500,7 +501,7 @@ bool Decoration::init()
     connect(c, &KDecoration3::DecoratedWindow::shadedChanged, this, &Decoration::recalculateBorders);
     connect(c, &KDecoration3::DecoratedWindow::captionChanged, this, [this]() {
         // update the caption area
-        update(titleBar());
+        update(titleBarStrip());
     });
 
     connect(c, &KDecoration3::DecoratedWindow::activeChanged, this, &Decoration::updateAnimationState);
@@ -519,6 +520,20 @@ bool Decoration::init()
     connect(c, &KDecoration3::DecoratedWindow::maximizedChanged, this, &Decoration::updateButtonsGeometry);
     connect(c, &KDecoration3::DecoratedWindow::adjacentScreenEdgesChanged, this, &Decoration::updateButtonsGeometry);
     connect(c, &KDecoration3::DecoratedWindow::shadedChanged, this, &Decoration::updateButtonsGeometry);
+
+    // setBorders() only writes the *next* decoration state; borderTop() keeps
+    // reporting the previous (or zero) value until the compositor applies it.
+    // Everything derived from borderTop() therefore has to be recomputed once
+    // the new borders actually become current, otherwise a reconfigure can lay
+    // the buttons out against a stale titlebar height.
+    connect(this, &KDecoration3::Decoration::bordersChanged, this, &Decoration::updateTitleBar);
+    connect(this, &KDecoration3::Decoration::bordersChanged, this, &Decoration::updateButtonsGeometry);
+    connect(this, &KDecoration3::Decoration::bordersChanged, this, &Decoration::updateBlur);
+
+    // border and button positions are snapped to the target device pixel grid
+    connect(c, &KDecoration3::DecoratedWindow::scaleChanged, this, &Decoration::recalculateBorders);
+    connect(c, &KDecoration3::DecoratedWindow::scaleChanged, this, &Decoration::updateButtonsGeometry);
+    connect(c, &KDecoration3::DecoratedWindow::nextScaleChanged, this, &Decoration::recalculateBorders);
 
     createButtons();
     createShadow();
@@ -725,6 +740,20 @@ void Decoration::reconfigure()
 }
 
 //________________________________________________________________
+qreal Decoration::scale() const
+{
+    const qreal value = window()->scale();
+    return value > 0 ? value : 1.0;
+}
+
+//________________________________________________________________
+qreal Decoration::nextScale() const
+{
+    const qreal value = window()->nextScale();
+    return value > 0 ? value : scale();
+}
+
+//________________________________________________________________
 void Decoration::recalculateBorders()
 {
     auto c = window();
@@ -751,7 +780,15 @@ void Decoration::recalculateBorders()
         top += baseSize * TitleBar_TopMargin + m_internalSettings->buttonPadding();
     }
 
-    setBorders(QMargins(left, top, right, bottom));
+    // Borders are logical pixels, but KWin positions the window contents on the
+    // device pixel grid. On a fractional scale an unsnapped border leaves the
+    // titlebar edge half a device pixel away from the contents, which shows up
+    // as a thin, more transparent seam under the titlebar.
+    const qreal scale = nextScale();
+    setBorders(QMarginsF(KDecoration3::snapToPixelGrid(static_cast<qreal>(left), scale),
+                         KDecoration3::snapToPixelGrid(static_cast<qreal>(top), scale),
+                         KDecoration3::snapToPixelGrid(static_cast<qreal>(right), scale),
+                         KDecoration3::snapToPixelGrid(static_cast<qreal>(bottom), scale)));
 
     // extended sizes
     const int extSize = s->largeSpacing();
@@ -847,17 +884,24 @@ void Decoration::updateButtonsGeometry()
 {
     const auto s = settings();
 
+    // borderTop() reports the applied state, which lags behind setBorders(). Laying
+    // the buttons out against a titlebar that does not exist yet collapses iconTop
+    // to zero and pins them to the top window edge; bordersChanged() calls us again
+    // once the real height is current.
+    if (!hideTitleBar() && borderTop() <= 0)
+        return;
+
+    const qreal pixelScale = scale();
     const int iconSize = buttonHeight();
     const int topPadding = s->smallSpacing() * Metrics::TitleBar_TopMargin;
     const int iconTop = qMax(0, topPadding + (captionHeight() - iconSize) / 2);
     const qreal edgeTopPadding = isTopEdge() ? iconTop : 0;
-    // KWin 6.7 rasterizes full-decoration and clipped button repaints on
-    // opposite sides of a device pixel at fractional scale. Keep maximized
-    // traffic lights on the visually correct (post-hover) pixel.
-    const qreal devicePixel = 1.0 / qMax<qreal>(1.0, window()->scale());
-    const qreal iconOffsetY = qMax<qreal>(0.0, edgeTopPadding - (isMaximized() ? devicePixel : 0.0));
+    // Glyphs are drawn from this offset, so keep it on the device pixel grid.
+    // Otherwise the same button rasterizes differently depending on how the
+    // repaint region happens to round, which makes it jitter on hover.
+    const qreal iconOffsetY = KDecoration3::snapToPixelGrid(edgeTopPadding, pixelScale);
     const qreal hitHeight = edgeTopPadding + iconSize;
-    const qreal groupTop = isTopEdge() ? 0 : iconTop;
+    const qreal groupTop = KDecoration3::snapToPixelGrid(isTopEdge() ? 0 : iconTop, pixelScale);
     const qreal spacing = 0.5 * s->smallSpacing() * m_internalSettings->buttonSpacing();
     const qreal horizontalMargin = 0.5 * s->smallSpacing()
         * (m_internalSettings->buttonPadding() + m_internalSettings->hOffset());
@@ -898,22 +942,24 @@ void Decoration::updateButtonsGeometry()
         if (isLeftEdge()) {
             // Place the group at x=0 and use the usual visual inset as extra
             // hit area. The glyph itself remains aligned with restored windows.
-            const qreal edgeInset = qMax<qreal>(0, horizontalMargin);
+            const qreal edgeInset = KDecoration3::snapToPixelGrid(qMax<qreal>(0, horizontalMargin), pixelScale);
             button->setGeometry(QRectF(QPointF(), QSizeF(iconSize + edgeInset, hitHeight)));
             button->setIconOffset(QPointF(edgeInset, iconOffsetY));
             m_leftButtons->setPos(QPointF(0, groupTop));
         } else {
-            m_leftButtons->setPos(QPointF(horizontalMargin + borderLeft(), groupTop));
+            m_leftButtons->setPos(QPointF(KDecoration3::snapToPixelGrid(horizontalMargin + borderLeft(), pixelScale), groupTop));
         }
     }
 
     if (Button *button = outerButton(m_rightButtons, false)) {
         if (isRightEdge()) {
-            const qreal edgeInset = qMax<qreal>(0, horizontalMargin);
+            const qreal edgeInset = KDecoration3::snapToPixelGrid(qMax<qreal>(0, horizontalMargin), pixelScale);
             button->setGeometry(QRectF(QPointF(), QSizeF(iconSize + edgeInset, hitHeight)));
-            m_rightButtons->setPos(QPointF(size().width() - m_rightButtons->geometry().width(), groupTop));
+            m_rightButtons->setPos(QPointF(KDecoration3::snapToPixelGrid(size().width() - m_rightButtons->geometry().width(), pixelScale), groupTop));
         } else {
-            m_rightButtons->setPos(QPointF(size().width() - m_rightButtons->geometry().width() - horizontalMargin - borderRight(), groupTop));
+            m_rightButtons->setPos(
+                QPointF(KDecoration3::snapToPixelGrid(size().width() - m_rightButtons->geometry().width() - horizontalMargin - borderRight(), pixelScale),
+                        groupTop));
         }
     }
 

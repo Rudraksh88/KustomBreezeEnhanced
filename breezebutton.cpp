@@ -148,7 +148,7 @@ namespace Breeze
         connect(decoration->settings().get(), &KDecoration3::DecorationSettings::reconfigured, this, &Button::reconfigure);
         connect( this, &KDecoration3::DecorationButton::hoveredChanged, this, &Button::updateAnimationState );
         const auto updateTitleBar = [decoration]() {
-            decoration->update(decoration->titleBar());
+            decoration->update(decoration->titleBarStrip());
         };
         connect(this, &KDecoration3::DecorationButton::hoveredChanged, this, updateTitleBar);
         connect(this, &KDecoration3::DecorationButton::pressedChanged, this, updateTitleBar);
@@ -163,7 +163,7 @@ namespace Breeze
         connect(decoration, &Decoration::buttonHoveredChanged, this, [this, decoration]() {
             if (decoration->internalSettings()->unisonHovering())
                 setAnimationHovered(decoration->buttonHovered());
-            decoration->update(decoration->titleBar());
+            decoration->update(decoration->titleBarStrip());
         });
 
         reconfigure();
@@ -280,8 +280,8 @@ namespace Breeze
             return;
 
         m_opacity = value;
-        if (decoration())
-            decoration()->update(decoration()->titleBar());
+        if (auto *d = qobject_cast<Decoration *>(decoration()))
+            d->update(d->titleBarStrip());
     }
 
     //__________________________________________________________________
