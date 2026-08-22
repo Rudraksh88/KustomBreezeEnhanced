@@ -104,6 +104,17 @@ namespace Breeze
             painter->translate(-9.0, -9.0);
         }
 
+        /* Every style draws the maximize and restore arrows for a button group
+           at the right of the titlebar, pointing away from it. Whether this
+           window's group is there is decided by the button order KWin is
+           configured with rather than by where the button lands, which is also
+           the only thing a standalone button has to go on. */
+        bool isInLeftButtonGroup(const KDecoration3::DecorationButton *button)
+        {
+            const auto *decoration = button->decoration();
+            return decoration && decoration->settings()->decorationButtonsLeft().contains(button->type());
+        }
+
         void drawModifiedDot(QPainter *painter, const QPointF &center, qreal outerCircleRadius, const QColor &color)
         {
             const qreal innerCircleRadius = outerCircleRadius * ModifiedDotRadiusRatio;
@@ -294,6 +305,20 @@ namespace Breeze
         painter->translate(m_iconOffset);
 
         if( !m_iconSize.isValid() || isStandAlone() ) m_iconSize = geometry().size().toSize();
+
+        // With the group on the left the arrows would point at the titlebar
+        // instead of away from it, so the glyph is mirrored. Each style maps its
+        // drawing into the same square -- it starts at geometry().topLeft() and
+        // is m_iconSize wide -- so one flip about that square's vertical centre
+        // serves all of them, and nothing else a button draws is horizontally
+        // asymmetric: the discs are centred on it and the only gradients run
+        // from top to bottom.
+        if (type() == DecorationButtonType::Maximize && isInLeftButtonGroup(this)) {
+            const qreal axis = geometry().left() + 0.5 * m_iconSize.width();
+            painter->translate(axis, 0);
+            painter->scale(-1, 1);
+            painter->translate(-axis, 0);
+        }
 
         // menu button
         if (type() == DecorationButtonType::Menu)
