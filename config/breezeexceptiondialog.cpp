@@ -27,6 +27,8 @@
 #include "breezedetectwidget.h"
 #include "config-breeze.h"
 
+#include <KColorButton>
+
 namespace Breeze
 {
 
@@ -47,6 +49,7 @@ namespace Breeze
         m_checkboxes.insert( HOffset, m_ui.hOffsetCheckBox );
         m_checkboxes.insert( TitleBarIconSize, m_ui.titleBarIconSizeCheckBox );
         m_checkboxes.insert( TitleBarIconSpacing, m_ui.titleBarIconSpacingCheckBox );
+        m_checkboxes.insert( TitleBarColor, m_ui.titleBarColorCheckBox );
 
         // detect window properties
         connect( m_ui.detectDialogButton, &QAbstractButton::clicked, this, &ExceptionDialog::selectWindowProperties );
@@ -69,6 +72,7 @@ namespace Breeze
 
         connect( m_ui.hideTitleBar, SIGNAL(currentIndexChanged(int)), SLOT(updateChanged()) );
         connect( m_ui.matchColorForTitleBar, &QAbstractButton::clicked, this, &ExceptionDialog::updateChanged );
+        connect( m_ui.titleBarCustomColor, &KColorButton::changed, this, &ExceptionDialog::updateChanged );
         connect( m_ui.systemForegroundColor, &QAbstractButton::clicked, this, &ExceptionDialog::updateChanged );
         connect( m_ui.drawTitleBarSeparator, &QAbstractButton::clicked, this, &ExceptionDialog::updateChanged );
         connect( m_ui.drawBackgroundGradient, &QAbstractButton::clicked, this, &ExceptionDialog::updateChanged );
@@ -99,6 +103,7 @@ namespace Breeze
         m_ui.titleBarIconSpacingSpinBox->setValue( m_exception->titleBarIconSpacing() );
         m_ui.hideTitleBar->setCurrentIndex( m_exception->hideTitleBar() );
         m_ui.matchColorForTitleBar->setChecked( m_exception->matchColorForTitleBar() );
+        m_ui.titleBarCustomColor->setColor( m_exception->titleBarCustomColor() );
         m_ui.systemForegroundColor->setChecked( m_exception->systemForegroundColor() );
         m_ui.drawTitleBarSeparator->setChecked( m_exception->drawTitleBarSeparator() );
         m_ui.drawBackgroundGradient->setChecked( m_exception->drawBackgroundGradient() );
@@ -129,6 +134,7 @@ namespace Breeze
         m_exception->setTitleBarIconSpacing( m_ui.titleBarIconSpacingSpinBox->value() );
         m_exception->setHideTitleBar( m_ui.hideTitleBar->currentIndex() );
         m_exception->setMatchColorForTitleBar( m_ui.matchColorForTitleBar->isChecked() );
+        m_exception->setTitleBarCustomColor( m_ui.titleBarCustomColor->color() );
         m_exception->setSystemForegroundColor( m_ui.systemForegroundColor->isChecked() );
         m_exception->setDrawTitleBarSeparator( m_ui.drawTitleBarSeparator->isChecked() );
         m_exception->setDrawBackgroundGradient( m_ui.drawBackgroundGradient->isChecked() );
@@ -163,6 +169,7 @@ namespace Breeze
         else if( m_exception->titleBarIconSpacing() != m_ui.titleBarIconSpacingSpinBox->value() ) modified = true;
         else if( m_exception->hideTitleBar() != m_ui.hideTitleBar->currentIndex() ) modified = true;
         else if( m_exception->matchColorForTitleBar() != m_ui.matchColorForTitleBar->isChecked() ) modified = true;
+        else if( m_exception->titleBarCustomColor() != m_ui.titleBarCustomColor->color() ) modified = true;
         else if( m_exception->systemForegroundColor() != m_ui.systemForegroundColor->isChecked() ) modified = true;
         else if( m_exception->drawTitleBarSeparator() != m_ui.drawTitleBarSeparator->isChecked() ) modified = true;
         else if( m_exception->drawBackgroundGradient() != m_ui.drawBackgroundGradient->isChecked() ) modified = true;

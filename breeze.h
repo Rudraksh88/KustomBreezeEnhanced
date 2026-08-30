@@ -123,7 +123,8 @@ namespace Breeze
         ButtonPadding = 1<<7,
         HOffset = 1<<8,
         TitleBarIconSize = 1<<9,
-        TitleBarIconSpacing = 1<<10
+        TitleBarIconSpacing = 1<<10,
+        TitleBarColor = 1<<11
     };
 }
 

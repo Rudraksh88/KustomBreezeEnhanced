@@ -180,21 +180,58 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
+      <item row="3" column="0" colspan="2">
+       <layout class="QHBoxLayout" name="horizontalLayout_5">
+        <item>
+         <widget class="QCheckBox" name="titleBarColorCheckBox">
+          <property name="toolTip">
+           <string>Give this window its own title bar color. It is used whether or not the box above is checked.</string>
+          </property>
+          <property name="text">
+           <string>Title bar color:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="KColorButton" name="titleBarCustomColor">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="alphaChannelEnabled">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_7">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item row="4" column="0">
         <widget class="QCheckBox" name="systemForegroundColor">
           <property name="text">
             <string>Use System Foreground Colors</string>
           </property>
         </widget>
       </item>
-      <item row="4" column="0">
+      <item row="5" column="0">
        <widget class="QCheckBox" name="drawBackgroundGradient">
         <property name="text">
          <string>Draw window background gradient</string>
         </property>
        </widget>
       </item>
-      <item row="5" column="0" colspan="2">
+      <item row="6" column="0" colspan="2">
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
          <spacer name="horizontalSpacer">
@@ -256,21 +293,21 @@
         </item>
        </layout>
       </item>
-      <item row="6" column="0">
+      <item row="7" column="0">
        <widget class="QCheckBox" name="drawTitleBarSeparator">
         <property name="text">
          <string>Draw separator between Title Bar and Window</string>
         </property>
        </widget>
       </item>
-      <item row="7" column="0">
+      <item row="8" column="0">
        <widget class="QCheckBox" name="opaqueTitleBar">
         <property name="text">
          <string>Opaque title bar</string>
         </property>
        </widget>
       </item>
-      <item row="8" column="0" colspan="2">
+      <item row="9" column="0" colspan="2">
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
          <spacer name="horizontalSpacer_3">
@@ -326,7 +363,7 @@
         </item>
        </layout>
       </item>
-      <item row="9" column="0">
+      <item row="10" column="0">
        <widget class="QCheckBox" name="isDialog">
         <property name="text">
          <string>Only for dialogs</string>
@@ -527,6 +564,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>KColorButton</class>
+   <extends>QPushButton</extends>
+   <header>kcolorbutton.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>
@@ -705,6 +749,16 @@
    <sender>titleBarIconSpacingCheckBox</sender>
    <signal>toggled(bool)</signal>
    <receiver>titleBarIconSpacingSpinBox</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel"><x>0</x><y>0</y></hint>
+    <hint type="destinationlabel"><x>0</x><y>0</y></hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>titleBarColorCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>titleBarCustomColor</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel"><x>0</x><y>0</y></hint>

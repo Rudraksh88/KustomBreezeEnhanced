@@ -66,6 +66,7 @@ namespace Breeze
             if( exception.mask() & HOffset ) configuration->setHOffset( exception.hOffset() );
             if( exception.mask() & TitleBarIconSize ) configuration->setTitleBarIconSize( exception.titleBarIconSize() );
             if( exception.mask() & TitleBarIconSpacing ) configuration->setTitleBarIconSpacing( exception.titleBarIconSpacing() );
+
             configuration->setHideTitleBar( exception.hideTitleBar() );
             configuration->setDrawTitleBarSeparator( exception.drawTitleBarSeparator() );
             configuration->setOpaqueTitleBar( exception.opaqueTitleBar() );
@@ -73,6 +74,19 @@ namespace Breeze
             configuration->setDrawBackgroundGradient( exception.drawBackgroundGradient() );
             configuration->setGradientOverride( exception.gradientOverride() );
             configuration->setMatchColorForTitleBar( exception.matchColorForTitleBar() );
+
+            /* An overridden title bar color is the color the window is to be
+               given, so it also turns on the flag above, which is what decides
+               that a custom color is used at all -- an override that needed a
+               second box ticked beside it would be kept and never read. Left
+               unmasked, both the flag and the color stay as the exception and
+               the global settings have them. */
+            if( exception.mask() & TitleBarColor )
+            {
+                configuration->setTitleBarCustomColor( exception.titleBarCustomColor() );
+                configuration->setMatchColorForTitleBar( true );
+            }
+
             configuration->setIsDialog( exception.isDialog() );
 
             // append to exceptions
@@ -112,7 +126,7 @@ namespace Breeze
     {
 
         // list of items to be written
-        QStringList keys = { "Enabled", "ExceptionPattern", "ExceptionType", "HideTitleBar", "DrawTitleBarSeparator", "IsDialog", "OpaqueTitleBar", "OpacityOverride", "Mask", "BorderSize", "MatchColorForTitleBar", "DrawBackgroundGradient", "GradientOverride", "ButtonSize", "ButtonSpacing", "ButtonPadding", "hOffset", "TitleBarIconSize", "TitleBarIconSpacing"};
+        QStringList keys = { "Enabled", "ExceptionPattern", "ExceptionType", "HideTitleBar", "DrawTitleBarSeparator", "IsDialog", "OpaqueTitleBar", "OpacityOverride", "Mask", "BorderSize", "MatchColorForTitleBar", "DrawBackgroundGradient", "GradientOverride", "ButtonSize", "ButtonSpacing", "ButtonPadding", "hOffset", "TitleBarIconSize", "TitleBarIconSpacing", "TitleBarCustomColor"};
 
         // write all items
         foreach( auto key, keys )
