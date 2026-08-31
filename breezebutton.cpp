@@ -45,7 +45,7 @@ namespace Breeze
         constexpr qreal MutedHoveredGlyphOpacity = 0.6;
         constexpr qreal ModifiedDotRadiusRatio = 0.4;
 
-        QImage whiteTint(QImage image, qreal opacity, bool highlightDetails)
+        QImage whiteTint(QImage image, qreal opacity, bool highlightDetails, bool preserveLightDetails)
         {
             image = image.convertToFormat(QImage::Format_ARGB32);
 
@@ -82,10 +82,20 @@ namespace Breeze
 
                     qreal pixelOpacity = opacity;
                     int tint = qRound(255 * (1.0 - contrast));
-                    if (highlightDetails) {
+                    const bool preservedLightDetail = preserveLightDetails
+                        && luminance > referenceLuminance;
+                    const bool animatedDarkDetail = !preserveLightDetails
+                        || (luminance < referenceLuminance
+                            && contrast >= 0.35
+                            && qAlpha(pixel) >= qRound(255.0 * 0.75));
+                    const bool emphasizeDetail = preservedLightDetail
+                        || (highlightDetails && animatedDarkDetail);
+                    if (emphasizeDetail) {
                         // Traffic-light glyphs are 60% black, so their normalized
                         // contrast is also about 60%. Map that to a 60%-white
-                        // hover highlight while leaving the circle at its base opacity.
+                        // detail while leaving the circle at its base opacity.
+                        // Glass rims are lighter than the circle, so they can be
+                        // preserved independently while dark glyphs still animate.
                         const qreal detailStrength = qMin<qreal>(1.0, contrast / 0.6);
                         pixelOpacity += detailStrength * (MutedHoveredGlyphOpacity - opacity);
                         tint = 255;
@@ -133,7 +143,9 @@ namespace Breeze
                                      const QPointF &center,
                                      qreal radius,
                                      const QColor &color,
-                                     bool glassHighlights)
+                                     bool glassHighlights,
+                                     qreal bottomOpacity,
+                                     qreal softGlowLight)
         {
             painter->save();
             painter->setPen(Qt::NoPen);
@@ -148,7 +160,7 @@ namespace Breeze
             const QRectF circle(center.x() - radius, center.y() - radius,
                                 radius * 2.0, radius * 2.0);
             QColor bottomColor(color);
-            bottomColor.setAlphaF(color.alphaF() * 0.65);
+            bottomColor.setAlphaF(color.alphaF() * bottomOpacity);
 
             QLinearGradient fill(center.x(), circle.top(), center.x(), circle.bottom());
             fill.setColorAt(0.0, color);
@@ -167,6 +179,9 @@ namespace Breeze
             // low-energy bloom beneath a compact bright rim. Restricting each
             // stroke with a vertical alpha ramp keeps the circle's sides clean.
             const auto drawInsetLight = [painter, &circle](qreal depth, qreal edgeLight) {
+                if (depth <= 0.0 || edgeLight <= 0.0)
+                    return;
+
                 constexpr qreal targetStep = 0.5;
                 constexpr qreal innerEdge = 0.65;
                 const int steps = qMax(1, static_cast<int>(std::ceil(depth / targetStep)));
@@ -192,7 +207,7 @@ namespace Breeze
                 }
             };
 
-            drawInsetLight(2.6, 0.065);
+            drawInsetLight(2.6, softGlowLight);
             drawInsetLight(0.8, 0.34);
             painter->restore();
 
@@ -333,8 +348,15 @@ namespace Breeze
         const bool muted = inactiveWindow || !isEnabled();
         const bool fadingHoverGlyph = d && d->internalSettings()->animationsEnabled()
             && m_animation->currentValue().toReal() > 0.0;
+        const bool persistentCheckedGlyph = d
+            && d->internalSettings()->buttonStyle() == InternalSettings::macSierra
+            && type() == DecorationButtonType::KeepAbove
+            && isChecked();
         const bool highlightMutedGlyph = inactiveWindow && isEnabled()
-            && (this->hovered() || fadingHoverGlyph);
+            && (this->hovered() || fadingHoverGlyph || persistentCheckedGlyph);
+        const bool preserveGlassHighlights = inactiveWindow && d
+            && d->internalSettings()->buttonStyle() == InternalSettings::macSierra
+            && d->internalSettings()->glassButtonHighlights();
 
         if (!muted) {
             paintButton(painter);
@@ -356,7 +378,8 @@ namespace Breeze
             paintButton(&imagePainter);
             imagePainter.end();
 
-            painter->drawImage(buttonRect.topLeft(), whiteTint(image, opacity, highlightMutedGlyph));
+            painter->drawImage(buttonRect.topLeft(),
+                               whiteTint(image, opacity, highlightMutedGlyph, preserveGlassHighlights));
         }
 
         painter->restore();
@@ -934,7 +957,7 @@ namespace Breeze
         symbol_pen.setWidthF( 9./7.*1.7*qMax((qreal)1.0, 20/width ) );
 
         QColor trafficLightGlyphColor(Qt::black);
-        trafficLightGlyphColor.setAlphaF(0.6);
+        trafficLightGlyphColor.setAlphaF(inactiveWindow ? 0.6 : 0.5);
         QPen trafficLightGlyphPen(symbol_pen);
         trafficLightGlyphPen.setColor(trafficLightGlyphColor);
 
@@ -957,6 +980,8 @@ namespace Breeze
         // Circles stay in the native coordinate system. Glyphs use the same
         // compact transform in every state and animate only as a composited layer.
         const qreal outerCircleRadius = 7.0;
+        const qreal glassBottomOpacity = inactiveWindow ? 0.65 : 0.60;
+        const qreal glassSoftGlowLight = inactiveWindow ? 0.045 : 0.0;
 
         switch( type() )
         {
@@ -974,7 +999,8 @@ namespace Breeze
                   button_color = QColor(200, 200, 200);
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
-                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights);
+                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights,
+                                        glassBottomOpacity, glassSoftGlowLight);
                 painter->setBrush( Qt::NoBrush );
                 if (shouldShowCloseConfirmationDot())
                 {
@@ -1005,7 +1031,8 @@ namespace Breeze
                   button_color = QColor(200, 200, 200);
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
-                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights);
+                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights,
+                                        glassBottomOpacity, glassSoftGlowLight);
                 painter->setBrush( Qt::NoBrush );
                 if ( showHoverGlyph )
                 {
@@ -1055,7 +1082,8 @@ namespace Breeze
                   button_color = QColor(200, 200, 200);
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
-                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights);
+                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights,
+                                        glassBottomOpacity, glassSoftGlowLight);
                 painter->setBrush( Qt::NoBrush );
                 if ( showHoverGlyph )
                 {
@@ -1078,7 +1106,8 @@ namespace Breeze
                   button_color = QColor(200, 200, 200);
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
-                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights);
+                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights,
+                                        glassBottomOpacity, glassSoftGlowLight);
                 painter->setBrush( Qt::NoBrush );
 
                 if ( showHoverGlyph || isChecked() )
@@ -1103,7 +1132,8 @@ namespace Breeze
                   button_color = QColor(200, 200, 200);
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
-                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights);
+                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights,
+                                        glassBottomOpacity, glassSoftGlowLight);
                 painter->setBrush( Qt::NoBrush );
 
                 if ( isChecked() )
@@ -1147,7 +1177,8 @@ namespace Breeze
                   button_color = QColor(200, 200, 200);
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
-                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights);
+                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights,
+                                        glassBottomOpacity, glassSoftGlowLight);
                 painter->setBrush( Qt::NoBrush );
 
                 if ( showHoverGlyph || isChecked() )
@@ -1192,7 +1223,8 @@ namespace Breeze
                 //   button_color = QColor(200, 200, 200);
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
-                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights);
+                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights,
+                                        glassBottomOpacity, glassSoftGlowLight);
                 painter->setBrush( Qt::NoBrush );
 
                 if ( showHoverGlyph || isChecked() )
@@ -1256,7 +1288,8 @@ namespace Breeze
                   button_color = QColor(200, 200, 200);
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
-                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights);
+                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights,
+                                        glassBottomOpacity, glassSoftGlowLight);
                 painter->setBrush( Qt::NoBrush );
 
                 if ( showHoverGlyph || isChecked() )
