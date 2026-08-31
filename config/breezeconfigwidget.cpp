@@ -71,6 +71,10 @@ ConfigWidget::ConfigWidget(QObject *parent, const KPluginMetaData &data, const Q
     connect(m_ui.opaqueTitleBar, &QAbstractButton::clicked, this, &ConfigWidget::updateChanged);
     connect(m_ui.drawBackgroundGradient, &QAbstractButton::clicked, this, &ConfigWidget::updateChanged);
     connect(m_ui.buttonStyle, SIGNAL(currentIndexChanged(int)), SLOT(updateChanged()));
+    connect(m_ui.buttonStyle, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int style) {
+        m_ui.glassButtonHighlights->setEnabled(style == InternalSettings::macSierra);
+    });
+    connect(m_ui.glassButtonHighlights, &QAbstractButton::clicked, this, &ConfigWidget::updateChanged);
     connect(m_ui.opacitySpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this](int /*i*/) {
         updateChanged();
     });
@@ -132,6 +136,8 @@ void ConfigWidget::load()
     m_ui.animationsEnabled->setChecked(m_internalSettings->animationsEnabled());
     m_ui.animationsDuration->setValue(m_internalSettings->animationsDuration());
     m_ui.buttonStyle->setCurrentIndex(m_internalSettings->buttonStyle());
+    m_ui.glassButtonHighlights->setChecked(m_internalSettings->glassButtonHighlights());
+    m_ui.glassButtonHighlights->setEnabled(m_internalSettings->buttonStyle() == InternalSettings::macSierra);
     m_ui.opacitySpinBox->setValue(m_internalSettings->backgroundOpacity());
     m_ui.gradientSpinBox->setValue(m_internalSettings->backgroundGradientIntensity());
     m_ui.drawTitleBarSeparator->setChecked(m_internalSettings->drawTitleBarSeparator());
@@ -193,6 +199,7 @@ void ConfigWidget::save()
     m_internalSettings->setAnimationsEnabled(m_ui.animationsEnabled->isChecked());
     m_internalSettings->setAnimationsDuration(m_ui.animationsDuration->value());
     m_internalSettings->setButtonStyle(m_ui.buttonStyle->currentIndex());
+    m_internalSettings->setGlassButtonHighlights(m_ui.glassButtonHighlights->isChecked());
     m_internalSettings->setBackgroundOpacity(m_ui.opacitySpinBox->value());
     m_internalSettings->setBackgroundGradientIntensity(m_ui.gradientSpinBox->value());
     m_internalSettings->setDrawTitleBarSeparator(m_ui.drawTitleBarSeparator->isChecked());
@@ -270,6 +277,8 @@ void ConfigWidget::defaults()
     m_ui.animationsEnabled->setChecked(m_internalSettings->animationsEnabled());
     m_ui.animationsDuration->setValue(m_internalSettings->animationsDuration());
     m_ui.buttonStyle->setCurrentIndex(m_internalSettings->buttonStyle());
+    m_ui.glassButtonHighlights->setChecked(m_internalSettings->glassButtonHighlights());
+    m_ui.glassButtonHighlights->setEnabled(m_internalSettings->buttonStyle() == InternalSettings::macSierra);
     m_ui.opacitySpinBox->setValue(m_internalSettings->backgroundOpacity());
     m_ui.gradientSpinBox->setValue(m_internalSettings->backgroundGradientIntensity());
 
@@ -331,6 +340,8 @@ void ConfigWidget::updateChanged()
     else if (m_ui.drawBackgroundGradient->isChecked() != m_internalSettings->drawBackgroundGradient())
         modified = true;
     else if (m_ui.buttonStyle->currentIndex() != m_internalSettings->buttonStyle())
+        modified = true;
+    else if (m_ui.glassButtonHighlights->isChecked() != m_internalSettings->glassButtonHighlights())
         modified = true;
     else if (m_ui.opacitySpinBox->value() != m_internalSettings->backgroundOpacity())
         modified = true;

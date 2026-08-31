@@ -24,6 +24,9 @@
 #include <KColorUtils>
 #include <KIconLoader>
 
+#include <cmath>
+
+#include <QLinearGradient>
 #include <QPainter>
 #include <QPainterPath>
 #include <QRegularExpression>
@@ -123,6 +126,81 @@ namespace Breeze
             painter->setPen(Qt::NoPen);
             painter->setBrush(color);
             painter->drawEllipse(center, innerCircleRadius, innerCircleRadius);
+            painter->restore();
+        }
+
+        void drawMacSierraButtonFace(QPainter *painter,
+                                     const QPointF &center,
+                                     qreal radius,
+                                     const QColor &color,
+                                     bool glassHighlights)
+        {
+            painter->save();
+            painter->setPen(Qt::NoPen);
+
+            if (!glassHighlights || color.alpha() == 0) {
+                painter->setBrush(color);
+                painter->drawEllipse(center, radius, radius);
+                painter->restore();
+                return;
+            }
+
+            const QRectF circle(center.x() - radius, center.y() - radius,
+                                radius * 2.0, radius * 2.0);
+            QColor bottomColor(color);
+            bottomColor.setAlphaF(color.alphaF() * 0.65);
+
+            QLinearGradient fill(center.x(), circle.top(), center.x(), circle.bottom());
+            fill.setColorAt(0.0, color);
+            fill.setColorAt(1.0, bottomColor);
+            painter->setBrush(fill);
+            painter->drawEllipse(circle);
+
+            QPainterPath clip;
+            clip.addEllipse(circle);
+            painter->save();
+            painter->setClipPath(clip, Qt::IntersectClip);
+            painter->setBrush(Qt::NoBrush);
+            painter->setCompositionMode(QPainter::CompositionMode_Plus);
+
+            // Match Surfboard's two opposing inset-light pairs: a broad,
+            // low-energy bloom beneath a compact bright rim. Restricting each
+            // stroke with a vertical alpha ramp keeps the circle's sides clean.
+            const auto drawInsetLight = [painter, &circle](qreal depth, qreal edgeLight) {
+                constexpr qreal targetStep = 0.5;
+                constexpr qreal innerEdge = 0.65;
+                const int steps = qMax(1, static_cast<int>(std::ceil(depth / targetStep)));
+                const qreal step = depth / steps;
+
+                for (int i = 0; i < steps; ++i) {
+                    const qreal progress = static_cast<qreal>(i) / steps;
+                    const qreal alpha = edgeLight * (1.0 - progress);
+                    QLinearGradient light(circle.center().x(), circle.top(),
+                                          circle.center().x(), circle.bottom());
+                    const QColor edgeColor(255, 255, 255, qRound(255.0 * alpha));
+                    const QColor clearColor(255, 255, 255, 0);
+                    light.setColorAt(0.0, edgeColor);
+                    light.setColorAt(0.24, clearColor);
+                    light.setColorAt(0.76, clearColor);
+                    light.setColorAt(1.0, edgeColor);
+
+                    QPen pen(QBrush(light), step + 0.35);
+                    pen.setCapStyle(Qt::RoundCap);
+                    painter->setPen(pen);
+                    const qreal inset = innerEdge + i * step;
+                    painter->drawEllipse(circle.adjusted(inset, inset, -inset, -inset));
+                }
+            };
+
+            drawInsetLight(2.6, 0.065);
+            drawInsetLight(0.8, 0.34);
+            painter->restore();
+
+            // A subdued outer boundary keeps the translucent lower fill crisp
+            // without obscuring the bright rim immediately inside it.
+            painter->setBrush(Qt::NoBrush);
+            painter->setPen(QPen(QColor(0, 0, 0, 64), 0.65));
+            painter->drawEllipse(circle.adjusted(0.325, 0.325, -0.325, -0.325));
             painter->restore();
         }
     }
@@ -823,6 +901,7 @@ namespace Breeze
         const qreal width( m_iconSize.width() );
         auto d = qobject_cast<Decoration*>( decoration() );
         const bool animationsEnabled = d->internalSettings()->animationsEnabled();
+        const bool glassHighlights = d->internalSettings()->glassButtonHighlights();
         setupMacButtonPainter(painter, geometry().topLeft(), width, true);
 
         bool inactiveWindow( d && !d->window()->isActive() );
@@ -893,12 +972,9 @@ namespace Breeze
                   button_color = QColor(100, 100, 100);
                 else
                   button_color = QColor(200, 200, 200);
-                painter->setBrush( button_color );
-                painter->setPen( Qt::NoPen );
-
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
-                painter->drawEllipse( c, r, r );
+                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights);
                 painter->setBrush( Qt::NoBrush );
                 if (shouldShowCloseConfirmationDot())
                 {
@@ -927,12 +1003,9 @@ namespace Breeze
                   button_color = QColor(100, 100, 100);
                 else
                   button_color = QColor(200, 200, 200);
-                painter->setBrush( button_color );
-                painter->setPen( Qt::NoPen );
-
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
-                painter->drawEllipse( c, r, r );
+                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights);
                 painter->setBrush( Qt::NoBrush );
                 if ( showHoverGlyph )
                 {
@@ -980,12 +1053,9 @@ namespace Breeze
                   button_color = QColor(100, 100, 100);
                 else
                   button_color = QColor(200, 200, 200);
-                painter->setBrush( button_color );
-                painter->setPen( Qt::NoPen );
-
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
-                painter->drawEllipse( c, r, r );
+                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights);
                 painter->setBrush( Qt::NoBrush );
                 if ( showHoverGlyph )
                 {
@@ -1006,12 +1076,9 @@ namespace Breeze
                   button_color = QColor(100, 100, 100);
                 else
                   button_color = QColor(200, 200, 200);
-                painter->setBrush( button_color );
-                painter->setPen( Qt::NoPen );
-
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
-                painter->drawEllipse( c, r, r );
+                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights);
                 painter->setBrush( Qt::NoBrush );
 
                 if ( showHoverGlyph || isChecked() )
@@ -1034,12 +1101,9 @@ namespace Breeze
                   button_color = QColor(100, 100, 100);
                 else
                   button_color = QColor(200, 200, 200);
-                painter->setBrush( button_color );
-                painter->setPen( Qt::NoPen );
-
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
-                painter->drawEllipse( c, r, r );
+                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights);
                 painter->setBrush( Qt::NoBrush );
 
                 if ( isChecked() )
@@ -1081,12 +1145,9 @@ namespace Breeze
                   button_color = QColor(100, 100, 100);
                 else
                   button_color = QColor(200, 200, 200);
-                painter->setBrush( button_color );
-                painter->setPen( Qt::NoPen );
-
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
-                painter->drawEllipse( c, r, r );
+                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights);
                 painter->setBrush( Qt::NoBrush );
 
                 if ( showHoverGlyph || isChecked() )
@@ -1129,12 +1190,9 @@ namespace Breeze
 
                 // else
                 //   button_color = QColor(200, 200, 200);
-                painter->setBrush( button_color );
-                painter->setPen( Qt::NoPen );
-
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
-                painter->drawEllipse( c, r, r );
+                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights);
                 painter->setBrush( Qt::NoBrush );
 
                 if ( showHoverGlyph || isChecked() )
@@ -1196,12 +1254,9 @@ namespace Breeze
                   button_color = QColor(100, 100, 100);
                 else
                   button_color = QColor(200, 200, 200);
-                painter->setBrush( button_color );
-                painter->setPen( Qt::NoPen );
-
                 const qreal r = outerCircleRadius;
                 QPointF c(static_cast<qreal>(9), static_cast<qreal>(9));
-                painter->drawEllipse( c, r, r );
+                drawMacSierraButtonFace(painter, c, r, button_color, glassHighlights);
                 painter->setBrush( Qt::NoBrush );
 
                 if ( showHoverGlyph || isChecked() )

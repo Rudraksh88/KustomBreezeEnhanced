@@ -386,6 +386,19 @@
          </item>
         </widget>
        </item>
+       <item row="2" column="4" colspan="5">
+        <widget class="QCheckBox" name="glassButtonHighlights">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="toolTip">
+          <string>Add a subtle glass gradient, soft glow, and sharp rim highlights to macOS Sierra buttons.</string>
+         </property>
+         <property name="text">
+          <string>Glass highlights</string>
+         </property>
+        </widget>
+       </item>
        <item row="7" column="2">
         <widget class="QSpinBox" name="cornerRadiusSpinBox">
          <property name="suffix">
@@ -1010,6 +1023,7 @@
     <tabstop>buttonSizeSlider</tabstop>
     <tabstop>buttonSizeSpinBox</tabstop>
    <tabstop>buttonStyle</tabstop>
+   <tabstop>glassButtonHighlights</tabstop>
    <tabstop>buttonSpacing</tabstop>
   <tabstop>buttonPadding</tabstop>
   <tabstop>hOffset</tabstop>
